@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Reality Shop</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <style>
+    body { 
+      margin: 0; 
+      font-family: 'Segoe UI', Arial, sans-serif; 
+      background: #f6f6f6; 
+      color: #222; 
+    }
+
+    /* Navigation bar */
+    nav { 
+      background-color: #212121; 
+      padding: 0 32px; 
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06); 
+    }
+    .nav-container { 
+      display: flex; 
+      align-items: center; 
+      justify-content: space-between; 
+      height: 70px; 
+    }
+    .logo { 
+      color: #fff; 
+      font-size: 1.7rem; 
+      font-weight: bold; 
+      letter-spacing: 2px; 
+      text-decoration: none; 
+    }
+    ul.nav-links { 
+      display: flex; 
+      list-style: none; 
+      gap: 32px; 
+    }
+    ul.nav-links li { position: relative; }
+    ul.nav-links li a { 
+      color: #fff; 
+      text-decoration: none; 
+      font-size: 1rem; 
+      padding: 8px 0; 
+      transition: color 0.2s; 
+    }
+    ul.nav-links li a:hover, 
+    ul.nav-links li a.active { 
+      color: #ff9800; 
+    }
+
+    /* Classic button style */
+    .btn-main { 
+      background: #ff9800; 
+      color: #fff; 
+      border: none; 
+      padding: 12px 28px; 
+      border-radius: 24px; 
+      font-size: 1.1rem; 
+      cursor: pointer; 
+      font-weight: 500; 
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
+      margin-top: 24px; 
+      transition: background 0.2s, transform 0.2s; 
+    }
+    .btn-main:hover { 
+      background: #e67600; 
+      transform: translateY(-2px) scale(1.04); 
+    }
+
+    /* Hero Section */
+    .hero { 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      justify-content: center; 
+      text-align: center; 
+      padding: 80px 20px 60px 20px; 
+      background: linear-gradient(90deg,#e2b574 0%,#fff8ed 100%); 
+    }
+    .hero h1 { 
+      font-size: 2.6rem; 
+      font-weight: bold; 
+      color: #212121; 
+      letter-spacing: 1px; 
+      margin-bottom: 20px; 
+    }
+    .hero p { 
+      font-size: 1.15rem; 
+      color: #2b2929; 
+      margin-bottom: 36px; 
+      max-width: 540px; 
+    }
+
+    /* Responsive */
+    @media (max-width: 700px) { 
+      .nav-container { 
+        flex-direction: column; 
+        height: auto; 
+      }
+      ul.nav-links { 
+        flex-direction: column; 
+        gap: 12px; 
+      }  
+    }
+  </style>
+  
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="nav-container">
+      <a href="index.html" class="logo">Reality Shop</a>
+      <ul class="nav-links">
+        <li><a href="index.html" class="active">Home</a></li>
+        <li><a href="shop.html">Shop</a></li>
+        <li><a href="cart.html">Cart</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="login.html">Account</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <h1>Welcome to Reality Shop</h1>
+    <p>Experience the Try-on before you buy.</p>
+    <a href="shop.html">
+      <button class="btn-main">Shop Now</button>
+    </a>
+  </section>
+
+</body>
+</html>
+
+
