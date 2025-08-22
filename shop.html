@@ -48,19 +48,19 @@
   </div>
 
   <script>
-    // Product data: Add 3D model path for .glb models, otherwise add image path
+    // Product data: Use 'glb' for the 3D model path, 'img' for image path
     const products = [
-      {name: "Single Royal Chair", price: 950, img: "imgs/chair.glb"},
-      {name: "Single Cot", price: 999, glb: "imgs/singlecot.glb"},
-      {name: "Blue T-shirt", price: 499, glb: "imgs/demo.glb"},
-      {name: "Plain Shirt", price: 450, img: "imgs/short.jpg"},
-      {name: "Table", price: 850, img: "imgs/table.glb"},
-      {name: "Sun Glass", price: 299, glb: "imgs/sunglas.glb"},
-      {name: "Three Seat Sofa", price: 999, img: "imgs/sofa1.jpg"},
-      {name: "Wooden Table", price: 750, img: "imgs/table.jpg"},
-      {name: "Sweat Shirt", price: 550, img: "imgs/Tshort.jpg"},
-      {name: "Head Phones", price: 899, img: "imgs/mp.jpg"},
-      {name: "Single Sofa", price: 980, img: "imgs/sofa.jpg"}
+      {name: "Single Royal Chair", price: 950, glb: "imgs/chair.glb"},
+      {name: "Single Cot",        price: 999, glb: "imgs/singlecot.glb"},
+      {name: "Blue T-shirt",      price: 499, glb: "imgs/demo.glb"},
+      {name: "Plain Shirt",       price: 450, img: "imgs/short.jpg"},
+      {name: "Table",             price: 850, glb: "imgs/table.glb"},
+      {name: "Sun Glass",         price: 299, glb: "imgs/sunglas.glb"},
+      {name: "Three Seat Sofa",   price: 999, img: "imgs/sofa1.jpg"},
+      {name: "Wooden Table",      price: 750, img: "imgs/table.jpg"},
+      {name: "Sweat Shirt",       price: 550, img: "imgs/Tshort.jpg"},
+      {name: "Head Phones",       price: 899, img: "imgs/mp.jpg"},
+      {name: "Single Sofa",       price: 980, img: "imgs/sofa.jpg"}
     ];
 
     // Dynamically generate the products
@@ -75,7 +75,7 @@
         div.innerHTML = `
           <model-viewer
             src="${p.glb}"
-            alt="${p.name}"
+            alt="${p.name} 3D view"
             auto-rotate
             camera-controls
             ar
@@ -84,10 +84,12 @@
             id="mv-${i}">
           </model-viewer>
         `;
-      } else {
+      } else if (p.img) {
         div.innerHTML = `
           <img src="${p.img}" alt="${p.name}">
         `;
+      } else {
+        div.innerHTML = `<div style="width:100%;height:200px;background:#eee;line-height:200px;">No Image</div>`;
       }
 
       div.innerHTML += `
@@ -99,13 +101,13 @@
       grid.appendChild(div);
     });
 
-    // Add camera reset logic for all model-viewers
+    // Reset 3D view on camera interaction ended for each 3D model
     window.addEventListener('DOMContentLoaded', () => {
       products.forEach((p, i) => {
         if (p.glb) {
           const mv = document.getElementById(`mv-${i}`);
           if (mv) {
-            const DEFAULT_ORBIT = '0deg 75deg 2.5m'; // adjust as needed
+            const DEFAULT_ORBIT = '0deg 75deg 2.5m'; // set as needed
             mv.addEventListener('camera-change', () => {
               mv.autoRotate = false;
             });
@@ -113,7 +115,7 @@
               setTimeout(() => {
                 mv.cameraOrbit = DEFAULT_ORBIT;
                 mv.autoRotate = true;
-              }, 1200); // Delay for smoother reset
+              }, 1200);
             });
           }
         }
@@ -140,4 +142,3 @@
   </script>
 </body>
 </html>
-
