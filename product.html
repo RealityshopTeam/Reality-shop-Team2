@@ -4,12 +4,6 @@
   <meta charset="UTF-8" />
   <title>Product Details - Reality Shop</title>
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
-  <style><!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>Product Details - Reality Shop</title>
-  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
   <style>
     body {
       margin: 0; font-family: 'Segoe UI', Arial, sans-serif; background: #f6f6f6; color: #222;
@@ -63,6 +57,7 @@
       border-radius: 8px;
       background-color: #fefefe;
       margin-bottom: 20px;
+      position: relative;
     }
     .product-info {
       width: 100%;
@@ -75,7 +70,7 @@
       font-weight: bold; font-size: 1.5rem; color: #ff9800;
       margin: 10px 0 20px;
     }
-    .product-info button {
+    .product-info button, .ar-button {
       background: #ff9800;
       color: #fff;
       padding: 12px 32px;
@@ -85,9 +80,13 @@
       font-size: 1.1rem;
       cursor: pointer;
       transition: background 0.3s ease;
+      margin-right: 12px;
     }
-    .product-info button:hover {
+    .product-info button:hover, .ar-button:hover {
       background: #e67600;
+    }
+    .buttons-row {
+      margin: 10px 0 20px;
     }
     .related-product {
       cursor: pointer;
@@ -136,33 +135,41 @@
     </aside>
   </div>
 
+  
   <script>
     const products = [
-      {name: "Single Royal Chair", price: 950, glb: "imgs/chair.glb"},
-      {name: "Single Cot",        price: 999, glb: "imgs/singlecot.glb"},
-      {name: "Blue T-shirt",      price: 499, img: "imgs/Ts.jpg"},
-      {name: "Plain Shirt",       price: 450, img: "imgs/short.jpg"},
-      {name: "Table",             price: 850, glb: "imgs/table.glb"},
-      {name: "Sun Glass",         price: 299, glb: "imgs/sunglas.glb"},
-      {name: "Three Seat Sofa",   price: 999, glb: "imgs/sofa1.glb"},
-      {name: "Wooden Table",      price: 750, glb: "imgs/woode table.glb"},
-      {name: "Sweat Shirt",       price: 550, img: "imgs/Tshort.jpg"},
-      {name: "Head Phones",       price: 899, glb: "imgs/head phone.glb"},
-      {name: "Single Sofa",       price: 980, glb: "imgs/sofa.glb"}
+      {name: "Single Royal Chair", price: 950, glb: "imgs/chair.glb", category: "Furniture"},
+      {name: "Single Cot",        price: 999, glb: "imgs/singlecot.glb", category: "Furniture"},
+      {name: "Blue T-shirt",      price: 499, img: "imgs/Ts.jpg", category: "Clothing"},
+      {name: "Plain Shirt",       price: 450, img: "imgs/short.jpg", category: "Clothing"},
+      {name: "Table",             price: 850, glb: "imgs/table.glb", category: "Furniture"},
+      {name: "Sun Glass",         price: 299, glb: "imgs/sunglas.glb", category: "Accessories"},
+      {name: "Three Seat Sofa",   price: 999, glb: "imgs/sofa1.glb", category: "Furniture"},
+      {name: "Wooden Table",      price: 750, glb: "imgs/woode table.glb", category: "Furniture"},
+      {name: "Sweat Shirt",       price: 550, img: "imgs/Tshort.jpg", category: "Clothing"},
+      {name: "Head Phones",       price: 899, glb: "imgs/head phone.glb", category: "Electronics"},
+      {name: "Single Sofa",       price: 980, glb: "imgs/sofa.glb", category: "Furniture"}
     ];
 
-    // Helper function to get URL params
     function getQueryParam(param) {
       const urlParams = new URLSearchParams(window.location.search);
       return urlParams.get(param);
     }
 
-    // Main product display with fullscreen enabled
     function displayProduct(product) {
       const container = document.getElementById('product-details');
       if (!product) {
         container.innerHTML = `<p>Product not found.</p>`;
         return;
+      }
+
+      // Check if product category supports AR (Furniture, Clothing, Accessories)
+      const canAR = ["Furniture", "Clothing", "Accessories"].includes(product.category);
+      let arButtonHtml = '';
+      if (canAR && product.glb) {
+        arButtonHtml = `
+          <button class="ar-button" onclick="openARViewer('${encodeURIComponent(product.glb)}')">View in AR</button>
+        `;
       }
 
       container.innerHTML = `
@@ -186,8 +193,11 @@
 
       <div class="product-info">
         <h1>${product.name}</h1>
+        <div class="buttons-row">
+          <button class="btn-main" onclick="alert('Added ${product.name} to cart!')">Add to Cart</button>
+          ${arButtonHtml}
+        </div>
         <p class="price">₹${product.price}.00</p>
-        <button class="btn-main" onclick="alert('Added ${product.name} to cart!')">Add to Cart</button>
         <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean euismod bibendum laoreet. Proin gravida dolor sit amet lacus accumsan.</p>
       </div>
       `;
@@ -208,9 +218,16 @@
       }
     }
 
+    // Open AR viewer page with model path param
+    function openARViewer(modelPath) {
+      window.open(`ar-view.html?model=${modelPath}`, '_blank');
+    }
+
     // Display related products on right side
     function displayRelated(product) {
       const container = document.getElementById('related-products');
+      container.innerHTML = `<h3>Related Products</h3>`; // reset
+
       const keyword = product.name.split(' ')[0].toLowerCase();
       const related = products.filter(p => p.name !== product.name && p.name.toLowerCase().includes(keyword));
       const relatedToShow = related.length ? related : products.filter(p => p.name !== product.name).slice(0, 4);
@@ -247,195 +264,3 @@
   </script>
 </body>
 </html>
-
-    body {
-      margin: 0; font-family: 'Segoe UI', Arial, sans-serif; background: #f6f6f6; color: #222;
-    }
-    nav {
-      background-color: #212121; padding: 0 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    }
-    .nav-container {
-      display: flex; align-items: center; justify-content: space-between; height: 70px;
-    }
-    .logo {
-      color: #fff; font-size: 1.7rem; font-weight: bold; letter-spacing: 2px; text-decoration: none;
-    }
-    ul.nav-links {
-      display: flex; list-style: none; gap: 32px;
-    }
-    ul.nav-links li a {
-      color: #fff; text-decoration: none; font-size: 1rem; padding: 8px 0; transition: color 0.2s;
-    }
-    ul.nav-links li a:hover, ul.nav-links li a.active {
-      color: #ff9800;
-    }
-    .page-container {
-      max-width: 1200px; margin: 40px auto; padding: 0 20px; display: flex; gap: 24px;
-      flex-wrap: wrap;
-    }
-    .product-details {
-      flex: 1 1 65%;
-      background: #fff;
-      padding: 24px;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      min-width: 300px;
-    }
-    .related-products {
-      flex: 1 1 30%;
-      background: #fff;
-      padding: 16px;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      min-width: 280px;
-      max-height: 600px;
-      overflow-y: auto;
-    }
-    model-viewer {
-      width: 100%;
-      height: 400px;
-      border-radius: 8px;
-      background-color: #fefefe;
-      margin-bottom: 20px;
-    }
-    .product-info h1 {
-      margin-top: 0; font-size: 2rem;
-    }
-    .product-info p.price {
-      font-weight: bold; font-size: 1.5rem; color: #ff9800;
-      margin: 10px 0 20px;
-    }
-    .related-product {
-      cursor: pointer;
-      margin-bottom: 16px;
-      border-bottom: 1px solid #eee;
-      padding-bottom: 12px;
-    }
-    .related-product:last-child {
-      border-bottom: none;
-    }
-    .related-product h4 {
-      margin: 0 0 6px;
-    }
-    .related-product model-viewer,
-    .related-product img {
-      width: 100%;
-      height: 150px;
-      object-fit: contain;
-      border-radius: 6px;
-    }
-  </style>
-</head>
-<body>
-  <nav>
-    <div class="nav-container">
-      <a href="index.html" class="logo">Reality Shop</a>
-      <ul class="nav-links">
-        <li><a href="index.html">Home</a></li>
-        <li><a href="shop.html" class="active">Shop</a></li>
-        <li><a href="cart.html">Cart</a></li>
-        <li><a href="contact.html">Contact</a></li>
-        <li><a href="about.html">About</a></li>
-        <li><a href="login.html">Account</a></li>
-      </ul>
-    </div>
-  </nav>
-
-  <div class="page-container">
-    <section class="product-details" id="product-details">
-      <!-- Product details will be injected here -->
-    </section>
-
-    <aside class="related-products" id="related-products">
-      <h3>Related Products</h3>
-      <!-- Related products will be injected here -->
-    </aside>
-  </div>
-
-  <script>
-    // Product data - must be consistent with main page for accuracy
-    const products = [
-      {name: "Single Royal Chair", price: 950, glb: "imgs/chair.glb"},
-      {name: "Single Cot",        price: 999, glb: "imgs/singlecot.glb"},
-      {name: "Blue T-shirt",      price: 499, img: "imgs/Ts.jpg"},
-      {name: "Plain Shirt",       price: 450, img: "imgs/short.jpg"},
-      {name: "Table",             price: 850, glb: "imgs/table.glb"},
-      {name: "Sun Glass",         price: 299, glb: "imgs/sunglas.glb"},
-      {name: "Three Seat Sofa",   price: 999, glb: "imgs/sofa1.glb"},
-      {name: "Wooden Table",      price: 750, glb: "imgs/woode table.glb"},
-      {name: "Sweat Shirt",       price: 550, img: "imgs/Tshort.jpg"},
-      {name: "Head Phones",       price: 899, glb: "imgs/head phone.glb"},
-      {name: "Single Sofa",       price: 980, glb: "imgs/sofa.glb"}
-    ];
-
-    // Helper: get query param by name
-    function getQueryParam(param) {
-      const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get(param);
-    }
-
-    // Display the selected product details
-    function displayProduct(product) {
-      const container = document.getElementById('product-details');
-      if (!product) {
-        container.innerHTML = `<p>Product not found.</p>`;
-        return;
-      }
-      container.innerHTML = `
-        ${product.glb ? `
-          <model-viewer src="${product.glb}" alt="${product.name} 3D model" 
-            camera-controls auto-rotate shadow-intensity="1" style="width:100%; height:400px; border-radius:8px;"></model-viewer>
-        ` : product.img ? `
-          <img src="${product.img}" alt="${product.name}" style="width:100%; height:400px; object-fit: contain; border-radius:8px;">
-        ` : ''}
-        <div class="product-info">
-          <h1>${product.name}</h1>
-          <p class="price">₹${product.price}.00</p>
-          <button class="btn-main" onclick="alert('Added ${product.name} to cart!')">Add to Cart</button>
-          <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean euismod bibendum laoreet. Proin gravida dolor sit amet lacus accumsan.</p>
-        </div>
-      `;
-    }
-
-    // Display related products based on a simple category rule (e.g., share a keyword in product name)
-    function displayRelated(product) {
-      const container = document.getElementById('related-products');
-      const keyword = product.name.split(' ')[0].toLowerCase(); // use first word as keyword
-      const related = products.filter(p => p.name !== product.name && p.name.toLowerCase().includes(keyword));
-
-      // If no related products found, show some random others (fallback)
-      const relatedToShow = related.length ? related : products.filter(p => p.name !== product.name).slice(0, 4);
-
-      relatedToShow.forEach(p => {
-        const div = document.createElement('div');
-        div.className = 'related-product';
-        div.style.cursor = "pointer";
-        div.onclick = () => {
-          window.location.href = `product.html?name=${encodeURIComponent(p.name)}`;
-        };
-
-        div.innerHTML = `
-          ${p.glb ? `
-            <model-viewer src="${p.glb}" alt="${p.name} 3D" camera-controls auto-rotate shadow-intensity="1"
-            style="width: 100%; height: 150px; border-radius: 6px;"></model-viewer>`
-          : p.img ? `
-            <img src="${p.img}" alt="${p.name}">`
-          : `<div style="width:100%;height:150px;background:#eee;line-height:150px;">No Image</div>`
-          }
-          <h4>${p.name}</h4>
-          <p>₹${p.price}.00</p>
-        `;
-        container.appendChild(div);
-      });
-    }
-
-    window.onload = () => {
-      const productName = getQueryParam('name');
-      const product = products.find(p => p.name === productName);
-      displayProduct(product);
-      if(product) displayRelated(product);
-    }
-  </script>
-</body>
-</html>
-
