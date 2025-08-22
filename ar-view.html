@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Reality Shop - AR View</title>
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+  <style>
+    body, html {
+      margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #000;
+      display: flex; justify-content: center; align-items: center;
+      font-family: Arial, sans-serif; color: white;
+    }
+    .ar-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      max-width: 600px;
+      max-height: 90vh;
+      box-shadow: 0 0 20px rgba(0,0,0,0.8);
+      border-radius: 12px;
+      overflow: hidden;
+      background: #222;
+    }
+    model-viewer {
+      width: 100%;
+      height: 100%;
+      background-color: transparent;
+      cursor: pointer;
+    }
+    .instructions {
+      position: absolute;
+      bottom: 20px;
+      width: 100%;
+      text-align: center;
+      font-size: 1.3rem;
+      padding: 12px 10px;
+      background: rgba(0,0,0,0.5);
+      user-select: none;
+      pointer-events: none;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+  </style>
+</head>
+<body>
+  <div class="ar-container">
+    <model-viewer
+      id="arModelViewer"
+      src="imgs/chair.glb"
+      alt="3D Furniture Model"
+      ar
+      ar-modes="scene-viewer quick-look webxr"
+      camera-controls
+      auto-rotate
+      shadow-intensity="1"
+      environment-image="neutral"
+      ar-scale="auto"
+      interaction-prompt="tap-to-place"
+      style="background-color: transparent;"
+    >
+    </model-viewer>
+    <div class="instructions" id="instructions">
+      Point your device to the floor and tap to place the furniture
+    </div>
+  </div>
+
+  <script>
+    const modelViewer = document.getElementById('arModelViewer');
+    const instructions = document.getElementById('instructions');
+
+    // Hide instructions once the user starts interacting with model-viewer
+    modelViewer.addEventListener('ar-status', event => {
+      // When AR session starts
+      if (event.detail.status === 'session-started') {
+        instructions.textContent = 'Move your device to find a surface, then tap to place';
+      } else if(event.detail.status === 'session-ended') {
+        instructions.textContent = 'Point your device to the floor and tap to place the furniture';
+      }
+    });
+
+    // Optional: Listen for model placement to update instructions
+    modelViewer.addEventListener('model-visibility', event => {
+      if(event.detail.visible) {
+        instructions.textContent = 'Tap and drag to move or pinch to scale the furniture';
+      }
+    });
+  </script>
+</body>
+</html>
