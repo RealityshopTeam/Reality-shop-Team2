@@ -4,122 +4,25 @@
   <meta charset="UTF-8">
   <title>Reality Shop - Products</title>
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
-
   <style>
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: #f6f6f6;
-            color: #222;
-        }
-        /* Navigation bar */
-        nav {
-            background-color: #212121;
-            padding: 0 32px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        }
-        .nav-container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            height: 70px;
-        }
-        .logo {
-            color: #fff;
-            font-size: 1.7rem;
-            font-weight: bold;
-            letter-spacing: 2px;
-            text-decoration: none;
-        }
-        ul.nav-links {
-            display: flex;
-            list-style: none;
-            gap: 32px;
-        }
-        ul.nav-links li {
-            position: relative;
-        }
-        ul.nav-links li a {
-            color: #fff;
-            text-decoration: none;
-            font-size: 1rem;
-            padding: 8px 0;
-            transition: color 0.2s;
-        }
-        ul.nav-links li a:hover, ul.nav-links li a.active {
-            color: #ff9800;
-        }
-        /* Classic button style */
-        .btn-main {
-            background: #ff9800;
-            color: #fff;
-            border: none;
-            padding: 12px 28px;
-            border-radius: 24px;
-            font-size: 1.1rem;
-            cursor: pointer;
-            font-weight: 500;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            margin-top: 24px;
-            transition: background 0.2s, transform 0.2s;
-        }
-        .btn-main:hover {
-            background: #e67600;
-            transform: translateY(-2px) scale(1.04);
-        }
-        /* Products grid */
-        .container {
-            max-width: 1200px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }
-        .container h1 {
-            text-align: center;
-            margin-bottom: 30px;
-            font-size: 2rem;
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill,minmax(250px,1fr));
-            gap: 24px;
-        }
-        .product {
-            background: #fff;
-            border-radius: 12px;
-            padding: 16px;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-        .product img {
-            width: 100%;
-            height: 200px;
-            object-fit: contain;
-            border-radius: 8px;
-            margin-bottom: 12px;
-        }
-        .product h3 {
-            margin: 10px 0 6px;
-            font-size: 1.1rem;
-        }
-        .product p {
-            margin-bottom: 12px;
-            font-weight: bold;
-            color: #444;
-        }
-        .product button {
-            background: #ff9800;
-            color: #fff;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: background 0.2s, transform 0.2s;
-        }
-        .product button:hover {
-            background: #e67600;
-            transform: translateY(-2px) scale(1.04);
-        }
+    body {margin: 0; font-family: 'Segoe UI', Arial, sans-serif; background: #f6f6f6; color: #222;}
+    nav {background-color: #212121; padding: 0 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);}
+    .nav-container {display: flex;align-items: center;justify-content: space-between;height: 70px;}
+    .logo {color: #fff;font-size: 1.7rem;font-weight: bold;letter-spacing: 2px;text-decoration: none;}
+    ul.nav-links {display: flex;list-style: none;gap: 32px;}
+    ul.nav-links li a {color: #fff;text-decoration: none;font-size: 1rem;padding: 8px 0;transition: color 0.2s;}
+    ul.nav-links li a:hover, ul.nav-links li a.active {color: #ff9800;}
+    .btn-main {background: #ff9800; color: #fff; border: none; padding: 12px 28px; border-radius: 24px; font-size: 1.1rem; cursor: pointer; font-weight: 500; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-top: 24px; transition: background 0.2s, transform 0.2s;}
+    .btn-main:hover {background: #e67600;transform: translateY(-2px) scale(1.04);}
+    .container {max-width: 1200px; margin: 40px auto; padding: 0 20px;}
+    .container h1 {text-align: center; margin-bottom: 30px; font-size: 2rem;}
+    .grid {display: grid;grid-template-columns: repeat(auto-fill,minmax(250px,1fr));gap: 24px;}
+    .product {background: #fff;border-radius: 12px;padding: 16px;text-align: center;box-shadow: 0 2px 8px rgba(0,0,0,0.08);}
+    .product model-viewer, .product img {width: 100%;height: 200px;object-fit: contain;border-radius: 8px;margin-bottom: 12px;}
+    .product h3 {margin: 10px 0 6px; font-size: 1.1rem;}
+    .product p {margin-bottom: 12px;font-weight: bold;color: #444;}
+    .product button {background: #ff9800; color: #fff; border: none; padding: 10px 20px; border-radius: 20px; font-size: 0.95rem; cursor: pointer;transition: background 0.2s, transform 0.2s;}
+    .product button:hover {background: #e67600;transform: translateY(-2px) scale(1.04);}
   </style>
 </head>
 <body>
@@ -138,134 +41,92 @@
     </div>
   </nav>
 
-  <!-- Products -->
+  <!-- Products (dynamically generated) -->
   <div class="container">
     <h1>Our Products</h1>
-    <div class="grid">
-      <div class="product" data-name="Single Royal Chair" data-price="950">
-        <img src="imgs/ed.jpg" alt="Single Royal Chair">
-        <h3>Single Royal Chair</h3>
-        <p>₹950.00</p>
-        <button onclick="addToCart(this)">Add to Cart</button>
-      </div>
-
-      <div class="product" data-name="Single Cot" data-price="999">
-         <model-viewer
-          src="/imgs/table.glb"
-          alt="3D Table Model"
-          auto-rotate
-          camera-controls
-           ar
-          shadow-intensity="1"
-          style=" width: 100%;
-            height: 200px;
-            object-fit: contain;
-            border-radius: 8px;
-            margin-bottom: 12px;">
-           </model-viewer>
-        <h3>Single Cot</h3>
-        <p>₹999.00</p>
-        <button onclick="addToCart(this)">Add to Cart</button>
-      </div>
-
-      <div class="product" data-name="Blue T-shirt" data-price="499">
-        <model-viewer
-          src="/imgs/demo.glb"
-          alt="3D Car Model"
-          auto-rotate
-          ar
-          camera-controls
-          shadow-intensity="1"
-          style=" width: 100%;
-            height: 200px;
-            object-fit: contain;
-            border-radius: 8px;
-            margin-bottom: 12px;">
-        </model-viewer>
-        <h3>Blue T-shirt</h3>
-        <p>₹499.00</p>
-        <button onclick="addToCart(this)">Add to Cart</button>
-      </div>
-
-      <div class="product" data-name="Plain Shirt" data-price="450">
-        <img src="imgs/short.jpg" alt="Plain Shirt">
-        <h3>Plain Shirt</h3>
-        <p>₹450.00</p>
-        <button onclick="addToCart(this)">Add to Cart</button>
-      </div>
-
-      <div class="product" data-name="Table" data-price="850">
-        <img src="imgs/chair.jpg" alt="Table">
-        <h3>Table</h3>
-        <p>₹850.00</p>
-        <button onclick="addToCart(this)">Add to Cart</button>
-      </div>
-
-      <div class="product" data-name="Sun Glass" data-price="299">
-        <model-viewer
-          src="/imgs/sunglas.glb"
-          alt="3D Table Model"
-          auto-rotate
-          camera-controls
-           ar
-          shadow-intensity="1"
-          style=" width: 100%;
-            height: 200px;
-            object-fit: contain;
-            border-radius: 8px;
-            margin-bottom: 12px;">
-           </model-viewer>
-        <h3>Sun Glass</h3>
-        <p>₹299.00</p>
-        <button onclick="addToCart(this)">Add to Cart</button>
-      </div>
-
-      <div class="product" data-name="Three Seat Sofa" data-price="999">
-        <img src="imgs/sofa1.jpg" alt="Three Seat Sofa">
-        <h3>Three Seat Sofa</h3>
-        <p>₹999.00</p>
-        <button onclick="addToCart(this)">Add to Cart</button>
-      </div>
-
-      <div class="product" data-name="Wooden Table" data-price="750">
-        <img src="imgs/table.jpg" alt="Wooden Table">
-        <h3>Wooden Table</h3>
-        <p>₹750.00</p>
-        <button onclick="addToCart(this)">Add to Cart</button>
-      </div>
-
-      <div class="product" data-name="Sweat Shirt" data-price="550">
-        <img src="imgs/Tshort.jpg" alt="Sweat Shirt">
-        <h3>Sweat Shirt</h3>
-        <p>₹550.00</p>
-        <button onclick="addToCart(this)">Add to Cart</button>
-      </div>
-
-      <div class="product" data-name="Head Phones" data-price="899">
-        <img src="imgs/mp.jpg" alt="Head Phones">
-        <h3>Head Phones</h3>
-        <p>₹899.00</p>
-        <button onclick="addToCart(this)">Add to Cart</button>
-      </div>
-
-      <div class="product" data-name="Single Sofa" data-price="980">
-        <img src="imgs/sofa.jpg" alt="Single Sofa">
-        <h3>Single Sofa</h3>
-        <p>₹980.00</p>
-        <button onclick="addToCart(this)">Add to Cart</button>
-      </div>
-    </div>
+    <div class="grid" id="product-grid"></div>
   </div>
 
-  <!-- Add To Cart Script -->
   <script>
+    // Product data: Add 3D model path for .glb models, otherwise add image path
+    const products = [
+      {name: "Single Royal Chair", price: 950, img: "imgs/ed.jpg"},
+      {name: "Single Cot", price: 999, glb: "imgs/table.glb"},
+      {name: "Blue T-shirt", price: 499, glb: "imgs/demo.glb"},
+      {name: "Plain Shirt", price: 450, img: "imgs/short.jpg"},
+      {name: "Table", price: 850, img: "imgs/chair.jpg"},
+      {name: "Sun Glass", price: 299, glb: "imgs/sunglas.glb"},
+      {name: "Three Seat Sofa", price: 999, img: "imgs/sofa1.jpg"},
+      {name: "Wooden Table", price: 750, img: "imgs/table.jpg"},
+      {name: "Sweat Shirt", price: 550, img: "imgs/Tshort.jpg"},
+      {name: "Head Phones", price: 899, img: "imgs/mp.jpg"},
+      {name: "Single Sofa", price: 980, img: "imgs/sofa.jpg"}
+    ];
+
+    // Dynamically generate the products
+    const grid = document.getElementById('product-grid');
+    products.forEach((p, i) => {
+      const div = document.createElement('div');
+      div.className = 'product';
+      div.setAttribute("data-name", p.name);
+      div.setAttribute("data-price", p.price);
+
+      if (p.glb) {
+        div.innerHTML = `
+          <model-viewer
+            src="${p.glb}"
+            alt="${p.name}"
+            auto-rotate
+            camera-controls
+            ar
+            shadow-intensity="1"
+            style="width: 100%; height: 200px; object-fit: contain; border-radius: 8px; margin-bottom: 12px;"
+            id="mv-${i}">
+          </model-viewer>
+        `;
+      } else {
+        div.innerHTML = `
+          <img src="${p.img}" alt="${p.name}">
+        `;
+      }
+
+      div.innerHTML += `
+        <h3>${p.name}</h3>
+        <p>₹${p.price}.00</p>
+        <button onclick="addToCart(this)">Add to Cart</button>
+      `;
+
+      grid.appendChild(div);
+    });
+
+    // Add camera reset logic for all model-viewers
+    window.addEventListener('DOMContentLoaded', () => {
+      products.forEach((p, i) => {
+        if (p.glb) {
+          const mv = document.getElementById(`mv-${i}`);
+          if (mv) {
+            const DEFAULT_ORBIT = '0deg 75deg 2.5m'; // adjust as needed
+            mv.addEventListener('camera-change', () => {
+              mv.autoRotate = false;
+            });
+            mv.addEventListener('camera-change-ended', () => {
+              setTimeout(() => {
+                mv.cameraOrbit = DEFAULT_ORBIT;
+                mv.autoRotate = true;
+              }, 1200); // Delay for smoother reset
+            });
+          }
+        }
+      });
+    });
+
+    // Add to cart functionality
     function addToCart(button) {
       let product = button.parentElement;
       let name = product.getAttribute("data-name");
       let price = parseInt(product.getAttribute("data-price"));
       let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
-      // check if already in cart
       let existing = cart.find(item => item.name === name);
       if (existing) {
         existing.quantity += 1;
@@ -279,34 +140,3 @@
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
