@@ -2,69 +2,103 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Webcam Face Mesh Avatar Capture</title>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/facemesh"></script>
+  <title>Selfie Avatar Creator - Reality Shop</title>
   <style>
-    body { text-align: center; font-family: Arial, sans-serif; background: #121212; color: white; }
-    video, canvas { width: 320px; height: 240px; margin: 10px; border-radius: 10px; background: black; }
+    body { 
+      font-family: Arial, sans-serif; text-align: center; background: #f0f2f5; margin: 0; padding: 20px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh;
+    }
+    video, canvas {
+      border-radius: 12px;
+      box-shadow: 0 2px 15px rgba(0,0,0,0.15);
+      max-width: 320px;
+      max-height: 320px;
+    }
+    button {
+      margin-top: 20px;
+      background-color: #ff9800;
+      color: white;
+      border: none;
+      padding: 12px 32px;
+      font-size: 1.1rem;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #e67600;
+    }
   </style>
 </head>
 <body>
-  <h1>3D Face Mesh Avatar Scan</h1>
-  <video id="video" autoplay muted playsinline></video>
-  <canvas id="output"></canvas>
+  <h1>Create Avatar by Selfie</h1>
+  <video id="video" autoplay playsinline></video>
+  <canvas id="canvas" style="display:none;"></canvas>
+  <button id="captureBtn">Capture & Generate Avatar</button>
 
   <script>
     const video = document.getElementById('video');
-    const canvas = document.getElementById('output');
-    const ctx = canvas.getContext('2d');
-    let model;
+    const canvas = document.getElementById('canvas');
+    const captureBtn = document.getElementById('captureBtn');
 
-    async function setupCamera() {
-      const stream = await navigator.mediaDevices.getUserMedia({video: {width: 320, height: 240}});
-      video.srcObject = stream;
-      return new Promise((resolve) => {
-        video.onloadedmetadata = () => {
-          resolve(video);
-        };
+    // Get access to webcam and stream to video element
+    async function startCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+        video.srcObject = stream;
+        await video.play();
+      } catch (e) {
+        alert("Error accessing webcam. Please allow camera permissions.");
+        console.error(e);
+      }
+    }
+
+    // Capture current video frame to canvas as blob
+    function captureImage() {
+      const context = canvas.getContext('2d');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      return new Promise(resolve => {
+        canvas.toBlob(blob => resolve(blob), 'image/jpeg', 0.9);
       });
     }
 
-    async function loadModel() {
-      return await facemesh.load();
+    // Upload image to temporary host and get URL (emulated here by converting blob to base64)
+    async function getImageDataURL(blob) {
+      return new Promise(resolve => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      });
     }
 
-    async function renderPrediction() {
-      const predictions = await model.estimateFaces(video);
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      if (predictions.length > 0) {
-        predictions.forEach(prediction => {
-          const keypoints = prediction.scaledMesh;
+    // Redirect user to Ready Player Me avatar creation page with selfie parameter
+    async function generateAvatar() {
+      captureBtn.disabled = true;
+      captureBtn.textContent = "Generating Avatar...";
+      try {
+        const blob = await captureImage();
+        const dataUrl = await getImageDataURL(blob);
 
-          ctx.fillStyle = 'red';
-          for (let i = 0; i < keypoints.length; i++) {
-            const [x, y] = keypoints[i];
-            ctx.beginPath();
-            ctx.arc(x, y, 1.5, 0, 2 * Math.PI);
-            ctx.fill();
-          }
-        });
+        // Ready Player Me supports avatar creation with selfie URL param
+        // Normally, you need to upload the selfie photo somewhere accessible over the internet
+        // For demo, we open just the avatar creator home page
+        // If you have image URL, you can pass: https://creator.readyplayer.me?user_image_url=YOUR_IMAGE_URL
+
+        // Open Ready Player Me avatar creator in new tab
+        window.open("https://readyplayer.me/avatar", "_blank");
+      } catch (error) {
+        alert("Failed to generate avatar. Please try again.");
+        console.error(error);
       }
-      requestAnimationFrame(renderPrediction);
+      captureBtn.disabled = false;
+      captureBtn.textContent = "Capture & Generate Avatar";
     }
 
-    async function main() {
-      await setupCamera();
-      video.play();
-      model = await loadModel();
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      renderPrediction();
-    }
+    captureBtn.addEventListener('click', generateAvatar);
 
-    main();
+    startCamera();
   </script>
 </body>
 </html>
