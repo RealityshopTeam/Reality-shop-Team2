@@ -2,38 +2,69 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Avatar Virtual Try-On - Reality Shop</title>
+  <title>Webcam Face Mesh Avatar Capture</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/facemesh"></script>
   <style>
-    body, html {
-      margin: 0; padding: 0; height: 100%; background: #f0f2f5;
-      font-family: Arial, sans-serif;
-      display: flex; flex-direction: column; align-items: center;
-    }
-    header {
-      width: 100%; background: #212121; color: white; padding: 16px 0;
-      text-align: center; font-size: 1.4rem; font-weight: bold;
-    }
-    iframe {
-      width: 100%; max-width: 900px; height: 600px; border: none;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-      margin-top: 24px;
-    }
-    .instructions {
-      max-width: 900px;
-      font-size: 1rem;
-      color: #444;
-      margin-top: 12px;
-      text-align: center;
-    }
+    body { text-align: center; font-family: Arial, sans-serif; background: #121212; color: white; }
+    video, canvas { width: 320px; height: 240px; margin: 10px; border-radius: 10px; background: black; }
   </style>
 </head>
 <body>
-  <header>Customize Your Avatar for Virtual Try-On</header>
-  <iframe src="https://readyplayer.me/avatar"></iframe>
-  <div class="instructions">
-    Use the avatar creator above to customize your 3D avatar.<br />
-    Once done, you can export the avatar for use in virtual try-on experiences.
-  </div>
+  <h1>3D Face Mesh Avatar Scan</h1>
+  <video id="video" autoplay muted playsinline></video>
+  <canvas id="output"></canvas>
+
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('output');
+    const ctx = canvas.getContext('2d');
+    let model;
+
+    async function setupCamera() {
+      const stream = await navigator.mediaDevices.getUserMedia({video: {width: 320, height: 240}});
+      video.srcObject = stream;
+      return new Promise((resolve) => {
+        video.onloadedmetadata = () => {
+          resolve(video);
+        };
+      });
+    }
+
+    async function loadModel() {
+      return await facemesh.load();
+    }
+
+    async function renderPrediction() {
+      const predictions = await model.estimateFaces(video);
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      if (predictions.length > 0) {
+        predictions.forEach(prediction => {
+          const keypoints = prediction.scaledMesh;
+
+          ctx.fillStyle = 'red';
+          for (let i = 0; i < keypoints.length; i++) {
+            const [x, y] = keypoints[i];
+            ctx.beginPath();
+            ctx.arc(x, y, 1.5, 0, 2 * Math.PI);
+            ctx.fill();
+          }
+        });
+      }
+      requestAnimationFrame(renderPrediction);
+    }
+
+    async function main() {
+      await setupCamera();
+      video.play();
+      model = await loadModel();
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      renderPrediction();
+    }
+
+    main();
+  </script>
 </body>
 </html>
