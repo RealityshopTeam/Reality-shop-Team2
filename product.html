@@ -165,11 +165,11 @@
 
     // Open AR viewer page with model path param
     function openARViewer(modelPath) {
-      window.open(`ar-view.html?model=${modelPath}`, 'https://readyplayer.me/avatar');
+      window.open(`ar-view.html?model=${modelPath}`, '_blank');
     }
     // Open Avatar Try-On page
     function openTryOn(name, img, glb) {
-      let url = `avatar-tryon.html?name=${name}`;
+      let url = `avatar.html?name=${name}`;
       if (img) url += `&img=${img}`;
       if (glb) url += `&glb=${glb}`;
       window.open(url, '_blank');
