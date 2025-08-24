@@ -4,22 +4,50 @@
   <meta charset="UTF-8" />
   <title>Selfie Avatar Creator - Reality Shop</title>
   <style>
-    body { 
-      font-family: Arial, sans-serif; text-align: center; background: #f0f2f5; margin: 0; padding: 20px;
-      display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh;
+    html, body {
+      width:100%; height:100%; margin:0; padding:0; background:#f0f2f5;
     }
+    body {
+      font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      height: 100vh;
+    }
+    .fullscreen-avatar {
+      position: fixed;
+      top:0; left:0; width:100vw; height:100vh;
+      background: #111;
+      z-index: 999;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column;
+    }
+    .fullscreen-avatar img {
+      border-radius: 50%;
+      width: 60vw;
+      height: 60vw;
+      object-fit: cover;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.45);
+      background: #222;
+    }
+    .fullscreen-avatar button {
+      margin-top: 32px;
+      background: #ff9800; color: white; border: none; padding: 16px 48px;
+      font-size: 1.25rem; border-radius: 30px; cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    .fullscreen-avatar button:hover { background: #e67600;}
     video, canvas {
-      border-radius: 12px;
+      border-radius: 18px;
       box-shadow: 0 2px 15px rgba(0,0,0,0.15);
-      max-width: 320px;
-      max-height: 320px;
+      max-width: 340px;
+      max-height: 340px;
+      margin-bottom: 10px;
+      background: #111;
     }
     button {
       margin-top: 20px;
       background-color: #ff9800;
       color: white;
       border: none;
-      padding: 12px 32px;
+      padding: 14px 34px;
       font-size: 1.1rem;
       border-radius: 30px;
       cursor: pointer;
@@ -31,17 +59,25 @@
   </style>
 </head>
 <body>
-  <h1>Create Avatar by Selfie</h1>
+  <h1>Create Your Avatar (Selfie)</h1>
   <video id="video" autoplay playsinline></video>
   <canvas id="canvas" style="display:none;"></canvas>
-  <button id="captureBtn">Capture & Generate Avatar</button>
+  <button id="captureBtn">Capture Selfie & View Fullscreen</button>
+
+  <!-- Fullscreen Avatar Modal -->
+  <div id="avatarModal" class="fullscreen-avatar" style="display:none;">
+    <img id="avatarImg" src="" alt="Your Avatar">
+    <button onclick="closeAvatar()">Close</button>
+  </div>
 
   <script>
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
     const captureBtn = document.getElementById('captureBtn');
+    const avatarModal = document.getElementById('avatarModal');
+    const avatarImg = document.getElementById('avatarImg');
 
-    // Get access to webcam and stream to video element
+    // Start webcam stream
     async function startCamera() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
@@ -53,50 +89,26 @@
       }
     }
 
-    // Capture current video frame to canvas as blob
-    function captureImage() {
-      const context = canvas.getContext('2d');
+    // Capture snapshot and display as "avatar" fullscreen
+    async function captureAvatar() {
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
+      const context = canvas.getContext('2d');
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
-      return new Promise(resolve => {
-        canvas.toBlob(blob => resolve(blob), 'image/jpeg', 0.9);
-      });
+
+      // Get data URL and show fullscreen avatar
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+      avatarImg.src = dataUrl;
+      avatarModal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
     }
 
-    // Upload image to temporary host and get URL (emulated here by converting blob to base64)
-    async function getImageDataURL(blob) {
-      return new Promise(resolve => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.readAsDataURL(blob);
-      });
+    function closeAvatar() {
+      avatarModal.style.display = 'none';
+      document.body.style.overflow = '';
     }
 
-    // Redirect user to Ready Player Me avatar creation page with selfie parameter
-    async function generateAvatar() {
-      captureBtn.disabled = true;
-      captureBtn.textContent = "Generating Avatar...";
-      try {
-        const blob = await captureImage();
-        const dataUrl = await getImageDataURL(blob);
-
-        // Ready Player Me supports avatar creation with selfie URL param
-        // Normally, you need to upload the selfie photo somewhere accessible over the internet
-        // For demo, we open just the avatar creator home page
-        // If you have image URL, you can pass: https://creator.readyplayer.me?user_image_url=YOUR_IMAGE_URL
-
-        // Open Ready Player Me avatar creator in new tab
-        window.open("https://readyplayer.me/avatar", "_blank");
-      } catch (error) {
-        alert("Failed to generate avatar. Please try again.");
-        console.error(error);
-      }
-      captureBtn.disabled = false;
-      captureBtn.textContent = "Capture & Generate Avatar";
-    }
-
-    captureBtn.addEventListener('click', generateAvatar);
+    captureBtn.addEventListener('click', captureAvatar);
 
     startCamera();
   </script>
