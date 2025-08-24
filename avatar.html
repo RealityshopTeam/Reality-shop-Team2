@@ -329,7 +329,6 @@
         }
       });
 
-      // Center and scale model
       const box = new THREE.Box3().setFromObject(avatarRoot);
       const size = new THREE.Vector3();
       box.getSize(size);
@@ -464,9 +463,16 @@
     });
 
     resetBtn.addEventListener('click', async () => {
+      // Remove any clothing
+      if (clothingCurrent) {
+        scene.remove(clothingCurrent);
+        clothingCurrent.traverse(child => {
+          if (child.geometry) child.geometry.dispose();
+          if (child.material) child.material.dispose();
+        });
+        clothingCurrent = null;
+      }
       await loadModel();
-      clothingCurrent && scene.remove(clothingCurrent);
-      clothingCurrent = null;
     });
 
     window.addEventListener('resize', () => {
@@ -517,7 +523,7 @@
       });
     }
 
-    // Animate
+    // Animate scene
     function animate() {
       requestAnimationFrame(animate);
       controls.update();
@@ -526,47 +532,16 @@
       renderer.render(scene, camera);
     }
 
+    let avatarRoot = null;
     let clothingCurrent = null;
 
-    // Init
-    let avatarRoot = null;
     async function init() {
       await loadModel();
       populateProductList();
       animate();
     }
 
-    async function loadModel() {
-      if (avatarRoot) {
-        scene.remove(avatarRoot);
-        avatarRoot = null;
-      }
-      const gltf = await loader.loadAsync(MODEL_URL);
-      avatarRoot = gltf.scene;
-      avatarRoot.traverse(obj => {
-        if (obj.isMesh) {
-          obj.castShadow = true;
-          obj.receiveShadow = true;
-          if (!(obj.material instanceof THREE.MeshStandardMaterial)) {
-            obj.material = new THREE.MeshStandardMaterial({ color: obj.material?.color || 0xffffff });
-          }
-        }
-      });
-      // Center & scale
-      const box = new THREE.Box3().setFromObject(avatarRoot);
-      const size = new THREE.Vector3();
-      box.getSize(size);
-      const center = new THREE.Vector3();
-      box.getCenter(center);
-      const scale = 1.6 / Math.max(size.x, size.y, size.z);
-      avatarRoot.scale.setScalar(scale);
-      avatarRoot.position.sub(center.multiplyScalar(scale));
-      avatarRoot.position.y = 0;
-      scene.add(avatarRoot);
-    }
-
     init();
   </script>
-
 </body>
 </html>
