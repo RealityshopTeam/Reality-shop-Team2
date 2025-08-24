@@ -2,258 +2,88 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Reality Shop — Selfie → 3D Avatar (No Ready Player Me)</title>
+  <title>Customizable Avatar - Reality Shop</title>
   <style>
-    :root { --bg:#0b0f14; --panel:#101620; --muted:#9fb3c8; --accent:#7ef6b6; }
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:#e9eef5;font-family:Inter,system-ui,Segoe UI,Roboto,Ubuntu,Helvetica,Arial,sans-serif}
-    header{padding:14px 18px;border-bottom:1px solid #1c2633;background:linear-gradient(180deg,#111726,#0b0f14)}
-    h1{margin:0;font-size:18px}
-    .wrap{display:grid;grid-template-columns:360px 1fr;gap:14px;height:calc(100vh - 58px);padding:14px}
-    .panel{background:var(--panel);border:1px solid #1c2633;border-radius:16px;overflow:hidden}
-    .left{display:flex;flex-direction:column}
-    .left h2{margin:12px;font-size:14px;color:var(--muted)}
-    .controls{padding:12px;border-top:1px solid #1c2633;display:grid;gap:10px}
-    .btn{appearance:none;border:0;padding:10px 12px;border-radius:10px;background:#1c2633;color:#e9eef5;cursor:pointer}
-    .btn.primary{background:var(--accent);color:#001410;font-weight:700}
-    .file{display:block}
-    .hint{font-size:12px;color:var(--muted)}
-    .right{position:relative}
-    #status{position:absolute;left:12px;bottom:12px;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.08);padding:8px 10px;border-radius:10px;font-size:12px}
-    canvas{display:block;width:100%;height:100%}
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      margin: 0; padding: 20px;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    #avatarContainer {
+      width: 260px;
+      height: 260px;
+      margin-bottom: 20px;
+    }
+    select {
+      margin-bottom: 12px;
+      padding: 6px 12px;
+      font-size: 1rem;
+      border-radius: 6px;
+    }
   </style>
 </head>
 <body>
-  <header>
-    <h1>🧍 Reality Shop — Build a 3D Avatar from a Selfie (Client‑Only)</h1>
-  </header>
-  <div class="wrap">
-    <section class="panel left">
-      <h2>1) Upload a selfie (frontal, even light)</h2>
-      <div class="controls">
-        <input class="file" id="selfieInput" type="file" accept="image/*" />
-        <div class="row">
-          <button class="btn" id="detectBtn">🔍 Detect Landmarks</button>
-          <button class="btn primary" id="buildBtn">🧱 Build 3D Head</button>
-        </div>
-        <div class="row">
-          <label class="hint">Optional: Add clothing model (.glb/.gltf)</label>
-          <input class="file" id="clothesInput" type="file" accept=".glb,.gltf,model/gltf-binary,model/gltf+json" />
-          <button class="btn" id="clearClothes">🧹 Remove Clothes</button>
-        </div>
-        <p class="hint">This demo:
-          <br>• Runs <strong>TensorFlow.js + MediaPipe Face Landmarks</strong> in-browser
-          <br>• Generates a 3D <em>face mesh</em> from your selfie (468 vertices)
-          <br>• UV‑maps your selfie onto the mesh for likeness
-          <br>• Attaches a lightweight parametric body
-        </p>
-        <p class="hint">To improve fidelity later, swap the simple body with your rigged mannequin and skin clothing to that rig.</p>
-      </div>
-    </section>
+  <h1>Create Your Avatar</h1>
+  <div id="avatarContainer"></div>
 
-    <section class="panel right" id="viewport">
-      <div id="status">Waiting for selfie…</div>
-    </section>
-  </div>
+  <label for="hairStyle">Hair Style:</label>
+  <select id="hairStyle">
+    <option value="ShortHairShortFlat">Short Hair Flat</option>
+    <option value="LongHairStraight">Long Hair Straight</option>
+    <option value="LongHairCurly">Long Hair Curly</option>
+    <option value="NoHair">No Hair</option>
+  </select>
 
-  <script type="module">
-    import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
-    import { OrbitControls } from 'https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js';
-    import { GLTFLoader } from 'https://unpkg.com/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
+  <label for="clotheType">Clothing:</label>
+  <select id="clotheType">
+    <option value="ShirtCrewNeck">Crew Neck Shirt</option>
+    <option value="Hoodie">Hoodie</option>
+    <option value="GraphicShirt">Graphic Shirt</option>
+    <option value="Overall">Overall</option>
+  </select>
 
-    // TensorFlow.js + Face Landmarks
-    // Note: these are fairly heavy (~7–10MB). Use a server & caching in production.
-    const tfScript = document.createElement('script');
-    tfScript.src = 'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.16.0/dist/tf.min.js';
-    document.head.appendChild(tfScript);
-    const fdlScript = document.createElement('script');
-    fdlScript.src = 'https://cdn.jsdelivr.net/npm/@tensorflow-models/face-landmarks-detection@1.0.4/dist/face-landmarks-detection.min.js';
-    document.head.appendChild(fdlScript);
+  <script src="https://cdn.jsdelivr.net/npm/@dicebear/avatars@4.10.1/dist/avatars.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@dicebear/avatars-avataaars-sprites@4.10.1/dist/avatars-avataaars-sprites.min.js"></script>
+  <script>
+    const avatarContainer = document.getElementById('avatarContainer');
+    const hairSelect = document.getElementById('hairStyle');
+    const clotheSelect = document.getElementById('clotheType');
 
-    const statusEl = document.getElementById('status');
-    const container = document.getElementById('viewport');
+    // Create dicebear avatar generator instance
+    const Avatars = window.dicebear.Avatar;
+    const style = window.dicebear.styles.avataaars;
 
-    let model; // Face landmarks model
-    let selfieImageBitmap = null;
-    let landmarks = null; // 468 points
+    function renderAvatar() {
+      const svg = new Avatars(style, {
+        hair: {
+          top: hairSelect.value,
+          color: "BrownDark"
+        },
+        clothes: {
+          type: clotheSelect.value,
+          color: "Blue03"
+        },
+        eyes: {
+          type: "Happy"
+        },
+        facialHair: {
+          type: "Blank"
+        },
+        mouth: {
+          type: "Smile"
+        },
+        skinColor: "Light"
+      }).create();
 
-    // ——— Three.js scene setup
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0b0f14);
-    const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
-    camera.position.set(0.2, 1.6, 2.4);
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(devicePixelRatio);
-    renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    container.appendChild(renderer.domElement);
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.target.set(0, 1.5, 0); controls.enableDamping = true;
-
-    // lights
-    const hemi = new THREE.HemisphereLight(0xffffff, 0x223344, 0.9); scene.add(hemi);
-    const key = new THREE.DirectionalLight(0xffffff, 1.0); key.position.set(3,5,2); scene.add(key);
-    const ground = new THREE.Mesh(new THREE.CircleGeometry(3.5, 64), new THREE.MeshStandardMaterial({ color:0x0f1620, roughness:0.95 }));
-    ground.rotation.x = -Math.PI/2; ground.position.y = 0; ground.receiveShadow = true; scene.add(ground);
-
-    const loader = new GLTFLoader();
-
-    // holders
-    let headMesh = null;
-    let bodyMesh = null;
-    let clothesRoot = null;
-
-    function setStatus(t){ statusEl.textContent = t; }
-
-    function resize(){
-      const w = container.clientWidth, h = container.clientHeight;
-      camera.aspect = w/h; camera.updateProjectionMatrix(); renderer.setSize(w,h);
-    }
-    addEventListener('resize', resize);
-
-    function animate(){ requestAnimationFrame(animate); controls.update(); renderer.render(scene,camera); }
-    animate();
-
-    // ——— UI
-    const selfieInput = document.getElementById('selfieInput');
-    const detectBtn = document.getElementById('detectBtn');
-    const buildBtn = document.getElementById('buildBtn');
-    const clothesInput = document.getElementById('clothesInput');
-    const clearClothes = document.getElementById('clearClothes');
-
-    selfieInput.addEventListener('change', async (e) => {
-      const file = e.target.files?.[0];
-      if (!file) return; setStatus('Loading selfie…');
-      const img = await createImageBitmap(file);
-      selfieImageBitmap = img; setStatus('Selfie ready. Click Detect.');
-    });
-
-    detectBtn.addEventListener('click', async () => {
-      if (!selfieImageBitmap) { setStatus('Upload a selfie first.'); return; }
-      await ensureModel();
-      setStatus('Detecting facial landmarks…');
-      const detections = await window.faceLandmarksDetection.estimateFaces({
-        input: selfieImageBitmap,
-        returnTensors: false,
-        flipHorizontal: false,
-        predictIrises: true
-      });
-      if (!detections || detections.length === 0){ setStatus('No face found. Try another photo.'); return; }
-      landmarks = detections[0].scaledMesh; // 468 points [x,y,z]
-      setStatus(`Got ${landmarks.length} landmarks. Click Build 3D Head.`);
-    });
-
-    buildBtn.addEventListener('click', () => {
-      if (!landmarks || !selfieImageBitmap) { setStatus('Run detection first.'); return; }
-      buildAvatarFromLandmarks(landmarks, selfieImageBitmap);
-    });
-
-    clearClothes.addEventListener('click', () => {
-      if (clothesRoot){ scene.remove(clothesRoot); clothesRoot = null; setStatus('Clothing removed'); }
-    });
-
-    clothesInput.addEventListener('change', (e) => {
-      const file = e.target.files?.[0]; if (!file) return;
-      if (!bodyMesh && !headMesh){ setStatus('Build avatar first.'); return; }
-      const url = URL.createObjectURL(file);
-      loader.load(url, (gltf) => {
-        if (clothesRoot) scene.remove(clothesRoot);
-        clothesRoot = gltf.scene; scene.add(clothesRoot);
-        // Position roughly to torso height
-        clothesRoot.position.set(0, 1.3, 0);
-        clothesRoot.scale.setScalar(1.0);
-        setStatus('Clothing added (non‑skinned). For deformation, rig to your body mesh skeleton in DCC.');
-        URL.revokeObjectURL(url);
-      }, undefined, (err)=>{ console.error(err); setStatus('Failed to load clothing'); });
-    });
-
-    async function ensureModel(){
-      if (model) return;
-      await new Promise(r => tfScript.onload = r);
-      await new Promise(r => fdlScript.onload = r);
-      // @ts-ignore
-      model = await window.faceLandmarksDetection.load(
-        window.faceLandmarksDetection.SupportedPackages.mediapipeFacemesh,
-        { maxFaces: 1 }
-      );
+      avatarContainer.innerHTML = svg;
     }
 
-    // ——— Build avatar
-    function buildAvatarFromLandmarks(points, imageBitmap){
-      // Remove old
-      if (headMesh) { scene.remove(headMesh); headMesh.geometry.dispose(); headMesh.material.map?.dispose(); headMesh.material.dispose(); headMesh = null; }
-      if (bodyMesh) { scene.remove(bodyMesh); bodyMesh.geometry.dispose(); bodyMesh.material.dispose(); bodyMesh = null; }
+    hairSelect.addEventListener('change', renderAvatar);
+    clotheSelect.addEventListener('change', renderAvatar);
 
-      // Normalize coordinates into [0,1] space based on bounding box
-      let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity; 
-      for (const p of points){ minX=Math.min(minX,p[0]);minY=Math.min(minY,p[1]);maxX=Math.max(maxX,p[0]);maxY=Math.max(maxY,p[1]); }
-      const w=maxX-minX, h=maxY-minY; const cx=minX+w/2, cy=minY+h/2;
-
-      // Build geometry using MediaPipe triangulation indices
-      const geom = new THREE.BufferGeometry();
-      const verts = new Float32Array(points.length*3);
-      const uvs = new Float32Array(points.length*2);
-      for (let i=0;i<points.length;i++){
-        const [px,py,pz]=points[i];
-        const nx=(px-cx)/w, ny=(py-cy)/h; // roughly center in unit face box
-        // Depth: amplify z a bit for relief; MediaPipe z is roughly relative to face size
-        const dz = -pz * 0.0025; // tune depth scale
-        // Scale to world units (meter-ish)
-        const sx = nx * 0.9; const sy = -ny * 1.2; // flip Y
-        verts[i*3+0]=sx; verts[i*3+1]=sy+1.6; verts[i*3+2]=dz; // lift head around 1.6m
-        // UVs: map from image space
-        uvs[i*2+0]=(px)/imageBitmap.width; uvs[i*2+1]=(py)/imageBitmap.height;
-      }
-      geom.setAttribute('position', new THREE.BufferAttribute(verts,3));
-      geom.setAttribute('uv', new THREE.BufferAttribute(uvs,2));
-      const indices = new Uint32Array(FACEMESH_TRIANGLES);
-      geom.setIndex(new THREE.BufferAttribute(indices,1));
-      geom.computeVertexNormals();
-
-      // Texture from selfie
-      const tex = new THREE.CanvasTexture(imageBitmapToCanvas(imageBitmap));
-      tex.flipY=false; tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
-
-      const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.7, metalness: 0.0, skinning: false });
-      headMesh = new THREE.Mesh(geom, mat);
-      scene.add(headMesh);
-
-      // Simple parametric body (capsule‑like)
-      const bodyGeo = new THREE.CapsuleGeometry(0.25, 0.8, 16, 24);
-      const bodyMat = new THREE.MeshStandardMaterial({ color: 0x8aa1b4, roughness: 0.9 });
-      bodyMesh = new THREE.Mesh(bodyGeo, bodyMat);
-      bodyMesh.position.set(0, 1.0, 0);
-      scene.add(bodyMesh);
-
-      // Eyes (simple spheres)
-      const eyeMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
-      const eyeG = new THREE.SphereGeometry(0.018, 16, 16);
-      const leftEye = new THREE.Mesh(eyeG, eyeMat); const rightEye = leftEye.clone();
-      const li = 468-8, ri = 468-5; // approximate iris indices if present
-      const L = points[li] || points[33]; const R = points[ri] || points[263];
-      const mapToWorld = (p)=> new THREE.Vector3((p[0]-cx)/w*0.9, -(p[1]-cy)/h*1.2 + 1.6, -p[2]*0.0025);
-      leftEye.position.copy(mapToWorld(L)); rightEye.position.copy(mapToWorld(R));
-      scene.add(leftEye); scene.add(rightEye);
-
-      setStatus('Avatar built from selfie ✅ — add clothing if you like.');
-    }
-
-    function imageBitmapToCanvas(bmp){
-      const c = document.createElement('canvas'); c.width = bmp.width; c.height = bmp.height;
-      const ctx = c.getContext('2d'); ctx.drawImage(bmp, 0, 0); return c;
-    }
-
-    // MediaPipe face tesselation (triangles) for the 468‑vertex mesh
-    // Source: MediaPipe FaceMesh FACEMESH_TESSELATION; converted to triangles list
-    // To keep the file size reasonable, a compacted list is included below.
-    // NOTE: This array is large. In production, import from a separate JS module.
-    const FACEMESH_TRIANGLES = [
-      127,34,139,11,0,37,232,231,120,72,37,39,128,121,47,232,121,128,104,69,67,175,171,148,157,154,155,118,50,101,73,39,40,9,151,108,48,115,131,194,204,211,74,40,185,80,42,183,40,92,186,230,229,118,202,212,214,83,18,17,76,61,146,160,29,30,56,157,173,106,204,194,135,214,192,203,165,98,21,71,68,51,45,4,144,24,23,77,146,91,205,50,187,201,200,18,91,40,39,183,185,40,1,38,39,2,37,0,72,203,129,37,72,39,118,73,42,107,105,66,43,106,204,74,198,217,47,171,170,140,67,69,108,43,57,201,74,198,120,119,118,9,108,151,48,115,220,169,150,23,22,24,143,116,15,159,158,28,247,246,161,22,26,25,200,201,208,196,197,3,196,236,198,14,1,162,2,97,172,141,164,167,57,47,151,217,200,201,208,202,210,214,32,194,211,146,61,78,60,62,76,61,57,213,207,205,36,142,100,57,47,213,173,155,133,190,173,133,244,189,190,133,155,112,33,246,247,33,112,155,26,113,225,46,43,202,206,205,154,153,22,39,37,167,200,208,36,142,129,98,64,129,69,53,104,49,131,119,120,68,63,104,54,103,68,103,38,54,114,47,217,224,223,221,72,38,103,97,2,141,141,75,148,4,5,45,195,197,3,96,77,90,224,220,115,45,51,4,144,24,23,77,96,62,80,184,74,180,40,185,40,92,196,242,20,245,33,240,97,141,75,59,166,60,75,148,171,192,204,211,100,142,164,167,5,39,202,210,120,233,232,128,170,171,140,9,151,108,57,213,47,45,4,144,24,23,77,146,61,146,91,205,50,187,201,200,18,91,40,39,183,185,40,1,38,39,2,37,0,72,203,129,37,72,39,118,73,42,107,105,66,43,106,204,74,198,217,47,171,170,140,67,69,108,43,57,201,74,198,120,119,118,9,108,151,48,115,220,169,150,23,22,24,143,116,15,159,158,28,247,246,161,22,26,25,200,201,208,196,197,3,196,236,198,14,1,162,2,97,172,141,164,167,57,47,151,217,200,201,208,202,210,214,32,194,211,146,61,78,60,62,76,61,57,213,207,205,36,142,100,57,47,213,173,155,133,190,173,133,244,189,190,133,155,112,33,246,247,33,112,155,26,113,225,46,43,202,206,205,154,153,22,39,37,167,200,208,36,142,129,98,64,129,69,53,104,49,131,119,120,68,63,104,54,103,68,103,38,54,114,47,217,224,223,221,72,38,103,97,2,141,141,75,148,4,5,45,195,197,3,96,77,90,224,220,115,45,51,4,144,24,23,77,96,62,80,184,74,180,40,185,40,92,196,242,20,245,33,240,97,141,75,59,166,60,75,148,171,192,204,211,100,142,164,167,5,39,202,210,120,233,232,128,170,171,140,9,151,108,57,213,47,45,51,5,4,144,24,23,96,77,62,80,184,180,74,92,40,245,20,242,46,53,106,63,68,104,42,74,184,151,9,108,206,216,205,92,186,40,84,85,16,205,92,206,203,165,98,53,67,104,117,123,50,222,192,214,196,3,236,51,45,118,101,50,205,206,92,42,74,129,203,98,12,34,127,169,150,108,114,47,217,226,87,121,232,120,231,232,121,47,114,34,11,163,102,49,48,219,237,198,198,236,20,242,46,4,5,117,123,50,176,141,75,100,142,166,79,218,166,38,72,103,17,83,18,5,51,4,203,129,98,144,151,9,169,150,170,93,137,227,99,79,218,197,195,6,75,60,166,79,167,34,127,234,107,69,108,146,43,91,231,230,120,113,226,247,218,79,116,15,17,118,50,101,33,229,228,80,81,42,44,125,19,236,198,134,217,198,198,217,236,14,1,162,179,86,178,85,84,17,206,216,205,203,129,142,33,112,26,227,137,116,41,38,72,79,167,147,121,41,38,42,81,38,183,42,85,84,18,41,42,82,9,37,72,226,113,160,163,161,144,144,161,246,83,82,18,38,81,17,16,85,85,86,18,38,72,17,77,146,146,61,152,62,66,78,79,167,147,73,118,50,169,150,108,97,172,196,196,237,242,116,15,159,14,87,162,52,65,66,229,228,117,233,232,221,47,217,121,223,224,117,117,222,223,65,52,53,66,103,54,173,157,155,119,118,120,197,3,196,195,5,51,4,120,233,221,220,115,218,219,237,198,198,236,20,242,167,34,234,61,152,146,37,39,167,78,62,66,77,146,61,118,120,119,120,231,233,229,117,228,31,226,225,111,35,143,10,109,67,42,84,183,215,179,86,180,47,221,217,210,202,208,99,59,75,54,38,103,63,53,104,40,39,37,167,34,127,201,200,18,91,40,39,183,40,92,165,98,129,46,53,104,50,123,117,223,222,227,192,129,203,235,219,218,114,47,217,224,221,84,83,182,181,42,108,69,67,38,72,41,71,21,162,39,37,272 // truncated placeholder comment
-    ];
-    // NOTE: For brevity, the FACEMESH_TRIANGLES array above is shortened in this snippet.
-    // In your real file, include the full 468‑vertex triangulation (about ~2500 indices).
-    // You can find the full array by searching for "MediaPipe FaceMesh FACEMESH_TESSELATION triangles".
+    // Initial render
+    renderAvatar();
   </script>
 </body>
 </html>
