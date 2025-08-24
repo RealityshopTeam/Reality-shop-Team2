@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>3D Avatar Display</title>
+  <title>3D Avatar Display - Reality Shop</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     body, html {
@@ -57,9 +57,11 @@
 
     const loader = new GLTFLoader();
 
+    let avatar;
+
     loader.load('baseAvatar.glb',
       (gltf) => {
-        const avatar = gltf.scene;
+        avatar = gltf.scene;
         scene.add(avatar);
 
         // Center and scale avatar
@@ -77,6 +79,7 @@
       undefined,
       (error) => {
         console.error('Error loading the avatar model:', error);
+        alert('Failed to load baseAvatar.glb model. Ensure the file is present in the same folder.');
       }
     );
 
@@ -89,6 +92,7 @@
     function animate() {
       requestAnimationFrame(animate);
       controls.update();
+      if(avatar) avatar.rotation.y += 0.003;
       renderer.render(scene, camera);
     }
 
