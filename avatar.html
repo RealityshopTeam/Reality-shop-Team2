@@ -29,52 +29,40 @@
 
   <label for="hairStyle">Hair Style:</label>
   <select id="hairStyle">
-    <option value="ShortHairShortFlat">Short Hair Flat</option>
-    <option value="LongHairStraight">Long Hair Straight</option>
-    <option value="LongHairCurly">Long Hair Curly</option>
-    <option value="NoHair">No Hair</option>
+    <option value="shortHairShortFlat">Short Hair Flat</option>
+    <option value="longHairStraight">Long Hair Straight</option>
+    <option value="longHairCurly">Long Hair Curly</option>
+    <option value="noHair">No Hair</option>
   </select>
 
   <label for="clotheType">Clothing:</label>
   <select id="clotheType">
-    <option value="ShirtCrewNeck">Crew Neck Shirt</option>
-    <option value="Hoodie">Hoodie</option>
-    <option value="GraphicShirt">Graphic Shirt</option>
-    <option value="Overall">Overall</option>
+    <option value="shirtCrewNeck">Crew Neck Shirt</option>
+    <option value="hoodie">Hoodie</option>
+    <option value="graphicShirt">Graphic Shirt</option>
+    <option value="overall">Overall</option>
   </select>
 
+  <!-- DiceBear Avatars v4 -->
   <script src="https://cdn.jsdelivr.net/npm/@dicebear/avatars@4.10.1/dist/avatars.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@dicebear/avatars-avataaars-sprites@4.10.1/dist/avatars-avataaars-sprites.min.js"></script>
+
   <script>
     const avatarContainer = document.getElementById('avatarContainer');
     const hairSelect = document.getElementById('hairStyle');
     const clotheSelect = document.getElementById('clotheType');
 
-    // Create dicebear avatar generator instance
-    const Avatars = window.dicebear.Avatar;
-    const style = window.dicebear.styles.avataaars;
-
     function renderAvatar() {
-      const svg = new Avatars(style, {
-        hair: {
-          top: hairSelect.value,
-          color: "BrownDark"
-        },
-        clothes: {
-          type: clotheSelect.value,
-          color: "Blue03"
-        },
-        eyes: {
-          type: "Happy"
-        },
-        facialHair: {
-          type: "Blank"
-        },
-        mouth: {
-          type: "Smile"
-        },
-        skinColor: "Light"
-      }).create();
+      const svg = window.dicebear.avatars.createAvatar(window.dicebear.avatarsAvataaars, {
+        top: [hairSelect.value],
+        hairColor: ["BrownDark"],
+        clothes: [clotheSelect.value],
+        clothesColor: ["Blue03"],
+        eyes: ["Happy"],
+        facialHair: ["Blank"],
+        mouth: ["Smile"],
+        skin: ["Light"]
+      });
 
       avatarContainer.innerHTML = svg;
     }
