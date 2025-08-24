@@ -2,82 +2,70 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Selfie Avatar Creator - Reality Shop</title>
+  <title>Avatar Selfie - Reality Shop</title>
   <style>
-    html, body {
-      width:100%; height:100%; margin:0; padding:0; background:#f0f2f5;
-    }
     body {
-      font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center;
-      height: 100vh;
+      font-family: Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 0;
+      display: flex; flex-direction: column; align-items: center; min-height: 100vh;
     }
-    .fullscreen-avatar {
-      position: fixed;
-      top:0; left:0; width:100vw; height:100vh;
-      background: #111;
-      z-index: 999;
-      display: flex; align-items: center; justify-content: center;
-      flex-direction: column;
-    }
-    .fullscreen-avatar img {
-      border-radius: 50%;
-      width: 60vw;
-      height: 60vw;
-      object-fit: cover;
-      box-shadow: 0 4px 32px rgba(0,0,0,0.45);
-      background: #222;
-    }
-    .fullscreen-avatar button {
-      margin-top: 32px;
-      background: #ff9800; color: white; border: none; padding: 16px 48px;
-      font-size: 1.25rem; border-radius: 30px; cursor: pointer;
-      transition: background-color 0.2s;
-    }
-    .fullscreen-avatar button:hover { background: #e67600;}
+    h1 { margin-top: 36px; margin-bottom: 16px; }
     video, canvas {
-      border-radius: 18px;
+      border-radius: 12px;
       box-shadow: 0 2px 15px rgba(0,0,0,0.15);
-      max-width: 340px;
-      max-height: 340px;
-      margin-bottom: 10px;
+      width: 320px;
+      height: 320px;
+      margin-bottom: 12px;
       background: #111;
+      object-fit: cover;
+    }
+    .avatar-selfie {
+      margin-top: 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+    .avatar-img {
+      border-radius: 50%;
+      width: 200px;
+      height: 200px;
+      object-fit: cover;
+      box-shadow: 0 4px 25px rgba(0,0,0,0.25);
     }
     button {
-      margin-top: 20px;
       background-color: #ff9800;
       color: white;
       border: none;
-      padding: 14px 34px;
-      font-size: 1.1rem;
-      border-radius: 30px;
+      padding: 12px 32px;
+      font-size: 1.05rem;
+      border-radius: 25px;
       cursor: pointer;
-      transition: background-color 0.3s ease;
+      margin-top: 12px;
+      transition: background 0.2s;
     }
-    button:hover {
-      background-color: #e67600;
-    }
+    button:hover { background: #e67600; }
   </style>
 </head>
 <body>
-  <h1>Create Your Avatar (Selfie)</h1>
-  <video id="video" autoplay playsinline></video>
-  <canvas id="canvas" style="display:none;"></canvas>
-  <button id="captureBtn">Capture Selfie & View Fullscreen</button>
 
-  <!-- Fullscreen Avatar Modal -->
-  <div id="avatarModal" class="fullscreen-avatar" style="display:none;">
-    <img id="avatarImg" src="" alt="Your Avatar">
-    <button onclick="closeAvatar()">Close</button>
+  <h1>Take Your Avatar Selfie</h1>
+  <video id="video" autoplay playsinline></video>
+  <button id="captureBtn">Capture Selfie</button>
+
+  <div class="avatar-selfie" style="display:none;" id="resultSection">
+    <img id="avatarImg" class="avatar-img" src="" alt="Your Avatar Selfie">
+    <button onclick="retakeSelfie()">Retake</button>
   </div>
+  <canvas id="canvas" style="display:none;"></canvas>
 
   <script>
     const video = document.getElementById('video');
-    const canvas = document.getElementById('canvas');
     const captureBtn = document.getElementById('captureBtn');
-    const avatarModal = document.getElementById('avatarModal');
+    const canvas = document.getElementById('canvas');
     const avatarImg = document.getElementById('avatarImg');
+    const resultSection = document.getElementById('resultSection');
 
-    // Start webcam stream
+    // Start webcam
     async function startCamera() {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
@@ -89,26 +77,28 @@
       }
     }
 
-    // Capture snapshot and display as "avatar" fullscreen
-    async function captureAvatar() {
+    // Capture current frame as selfie avatar
+    function captureSelfie() {
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       const context = canvas.getContext('2d');
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-      // Get data URL and show fullscreen avatar
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
-      avatarImg.src = dataUrl;
-      avatarModal.style.display = 'flex';
-      document.body.style.overflow = 'hidden';
+      // Show selfie
+      avatarImg.src = canvas.toDataURL('image/jpeg', 0.95);
+      resultSection.style.display = 'flex';
+      video.style.display = 'none';
+      captureBtn.style.display = 'none';
     }
 
-    function closeAvatar() {
-      avatarModal.style.display = 'none';
-      document.body.style.overflow = '';
+    // Retake selfie
+    function retakeSelfie() {
+      resultSection.style.display = 'none';
+      video.style.display = 'block';
+      captureBtn.style.display = 'inline-block';
     }
 
-    captureBtn.addEventListener('click', captureAvatar);
+    captureBtn.addEventListener('click', captureSelfie);
 
     startCamera();
   </script>
