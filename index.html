@@ -1,138 +1,243 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Reality Shop</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
+  <meta charset="UTF-8" />
+  <title>Reality Shop - About & Contact</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    body { 
-      margin: 0; 
-      font-family: 'Segoe UI', Arial, sans-serif; 
-      background: #f6f6f6; 
-      color: #222; 
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f6f6f6;
+      color: #222;
     }
-
     /* Navigation bar */
-    nav { 
-      background-color: #212121; 
-      padding: 0 32px; 
-      box-shadow: 0 2px 8px rgba(0,0,0,0.06); 
+    nav {
+      background-color: #212121;
+      padding: 0 32px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     }
-    .nav-container { 
-      display: flex; 
-      align-items: center; 
-      justify-content: space-between; 
-      height: 70px; 
+    .nav-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 70px;
     }
-    .logo { 
-      color: #fff; 
-      font-size: 1.7rem; 
-      font-weight: bold; 
-      letter-spacing: 2px; 
-      text-decoration: none; 
+    .logo {
+      color: #fff;
+      font-size: 1.7rem;
+      font-weight: bold;
+      letter-spacing: 2px;
+      text-decoration: none;
     }
-    ul.nav-links { 
-      display: flex; 
-      list-style: none; 
-      gap: 32px; 
+    ul.nav-links {
+      display: flex;
+      list-style: none;
+      gap: 32px;
+      margin: 0;
+      padding: 0;
     }
-    ul.nav-links li { position: relative; }
-    ul.nav-links li a { 
-      color: #fff; 
-      text-decoration: none; 
-      font-size: 1rem; 
-      padding: 8px 0; 
-      transition: color 0.2s; 
+    ul.nav-links li {
+      position: relative;
     }
-    ul.nav-links li a:hover, 
-    ul.nav-links li a.active { 
-      color: #ff9800; 
+    ul.nav-links li a {
+      color: #fff;
+      text-decoration: none;
+      font-size: 1rem;
+      padding: 8px 0;
+      transition: color 0.2s;
     }
-
+    ul.nav-links li a:hover,
+    ul.nav-links li a.active {
+      color: #ff9800;
+    }
     /* Classic button style */
-    .btn-main { 
-      background: #ff9800; 
-      color: #fff; 
-      border: none; 
-      padding: 12px 28px; 
-      border-radius: 24px; 
-      font-size: 1.1rem; 
-      cursor: pointer; 
-      font-weight: 500; 
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
-      margin-top: 24px; 
-      transition: background 0.2s, transform 0.2s; 
+    .btn-main {
+      background: #ff9800;
+      color: #fff;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 24px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      font-weight: 500;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      margin-top: 24px;
+      transition: background 0.2s, transform 0.2s;
     }
-    .btn-main:hover { 
-      background: #e67600; 
-      transform: translateY(-2px) scale(1.04); 
+    .btn-main:hover {
+      background: #e67600;
+      transform: translateY(-2px) scale(1.04);
     }
-
     /* Hero Section */
-    .hero { 
-      display: flex; 
-      flex-direction: column; 
-      align-items: center; 
-      justify-content: center; 
-      text-align: center; 
-      padding: 80px 20px 60px 20px; 
-      background: linear-gradient(90deg,#e2b574 0%,#fff8ed 100%); 
+    .hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 80px 20px 60px 20px;
+      background: linear-gradient(90deg,#e2b574 0%,#fff8ed 100%);
     }
-    .hero h1 { 
-      font-size: 2.6rem; 
-      font-weight: bold; 
-      color: #212121; 
-      letter-spacing: 1px; 
-      margin-bottom: 20px; 
+    .hero h1 {
+      font-size: 2.6rem;
+      font-weight: bold;
+      color: #212121;
+      letter-spacing: 1px;
+      margin-bottom: 20px;
     }
-    .hero p { 
-      font-size: 1.15rem; 
-      color: #2b2929; 
-      margin-bottom: 36px; 
-      max-width: 540px; 
+    .hero p {
+      font-size: 1.15rem;
+      color: #2b2929;
+      margin-bottom: 36px;
+      max-width: 540px;
     }
-
+    /* Container for content */
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 30px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+    }
+    .container h2 {
+      text-align: center;
+      color: #212121;
+      margin-bottom: 20px;
+    }
+    .container p {
+      margin-bottom: 15px;
+      line-height: 1.7;
+    }
+    .highlight {
+      color: #ff9800;
+      font-weight: bold;
+    }
+    /* Contact form */
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+    label {
+      margin: 8px 0 4px;
+      font-weight: 500;
+    }
+    input, textarea {
+      padding: 10px;
+      border: 1px solid #bbb;
+      border-radius: 6px;
+      font-size: 0.95em;
+      resize: vertical;
+    }
+    textarea {
+      min-height: 100px;
+    }
+    form button {
+      margin-top: 14px;
+      padding: 12px;
+      background-color: #ff9800;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.3s;
+    }
+    form button:hover {
+      background-color: #e67600;
+    }
+    .contact-info {
+      margin-top: 25px;
+      padding: 14px;
+      background: #fff8ed;
+      border-left: 4px solid #ff9800;
+      border-radius: 6px;
+      font-size: 0.9em;
+    }
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 16px;
+      margin-top: 40px;
+      background-color: #212121;
+      color: #fff;
+      font-size: 0.9rem;
+    }
     /* Responsive */
-    @media (max-width: 700px) { 
-      .nav-container { 
-        flex-direction: column; 
-        height: auto; 
+    @media (max-width: 700px) {
+      .nav-container {
+        flex-direction: column;
+        height: auto;
+        padding: 15px;
       }
-      ul.nav-links { 
-        flex-direction: column; 
-        gap: 12px; 
-      }  
+      ul.nav-links {
+        flex-direction: column;
+        gap: 12px;
+      }
     }
   </style>
-  
 </head>
 <body>
 
-  <!-- Navigation -->
-  <nav>
-    <div class="nav-container">
-      <a href="index.html" class="logo">Reality Shop</a>
-      <ul class="nav-links">
-        <li><a href="index.html" class="active">Home</a></li>
-        <li><a href="shop.html">Shop</a></li>
-        <li><a href="cart.html">Cart</a></li>
-        <li><a href="contact.html">Contact</a></li>
-        <li><a href="about.html">About</a></li>
-        <li><a href="login.html">Account</a></li>
-      </ul>
-    </div>
-  </nav>
+<!-- Navigation -->
+<nav>
+  <div class="nav-container">
+    <a href="index.html" class="logo">Reality Shop</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="shop.html">Shop</a></li>
+      <li><a href="cart.html">Cart</a></li>
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="about.html" class="active">About</a></li>
+      <li><a href="login.html">Account</a></li>
+    </ul>
+  </div>
+</nav>
 
-  <!-- Hero Section -->
-  <section class="hero">
-    <h1>Welcome to Reality Shop</h1>
-    <p>Experience the Try-on before you buy.</p>
-    <a href="shop.html">
-      <button class="btn-main">Shop Now</button>
-    </a>
-  </section>
+<!-- Hero Section -->
+<section class="hero">
+  <h1>About Reality Shop</h1>
+  <p>Discover how we’re blending <span class="highlight">innovation</span> and <span class="highlight">shopping</span> into one seamless experience.</p>
+</section>
+
+<!-- About Section -->
+<section class="container" id="about">
+  <h2>Who We Are</h2>
+  <p>Welcome to <span class="highlight">Reality Shop</span> – your one-stop destination for a seamless and innovative shopping experience. We combine modern e-commerce convenience with advanced features like AR-based product visualization, 3D viewing, and interactive tools to help you make the right purchase decisions.</p>
+  <p>Founded in 2025, our mission is to <span class="highlight">bridge the gap between online and offline shopping</span> by offering tools that let you explore products virtually before making a purchase.</p>
+  <p>At Reality Shop, you’ll find a wide variety of products at affordable prices, all backed by our commitment to quality and customer satisfaction. We believe that shopping should be <span class="highlight">fun, immersive, and stress-free</span>.</p>
+  <p>Thank you for choosing Reality Shop. We look forward to making your shopping experience smarter and more exciting!</p>
+</section>
+
+<!-- Contact Section -->
+<section class="container" id="contact">
+  <h2>Get in Touch</h2>
+  <p>We’d love to hear from you. Fill out the form below or reach us directly via email or phone.</p>
+  <form>
+    <label for="name">Full Name</label>
+    <input type="text" id="name" name="name" placeholder="Enter your name" required />
+    <label for="email">Email Address</label>
+    <input type="email" id="email" name="email" placeholder="Enter your email" required />
+    <label for="subject">Subject</label>
+    <input type="text" id="subject" name="subject" placeholder="Enter subject" required />
+    <label for="message">Your Message</label>
+    <textarea id="message" name="message" placeholder="Write your message..." required></textarea>
+    <button type="submit">Send Message</button>
+  </form>
+
+  <div class="contact-info">
+    <h3>Our Contact Details</h3>
+    <p>Email: penkejayesh@gmail.com</p>
+    <p>Phone: +91 6309680277</p>
+    <p>Address: Reality Shop HQ, kkd, India</p>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <p>© 2025 Reality Shop. All rights reserved.</p>
+</footer>
 
 </body>
 </html>
-
-
