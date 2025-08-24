@@ -2,122 +2,276 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Selfie Capture - Reality Shop</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reality Shop — Selfie Avatar Try‑On</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f0f2f5;
-      margin: 0;
-      padding: 0;
-      display: flex; flex-direction: column; align-items: center; min-height: 100vh;
-      justify-content: center;
-    }
-    h1 {
-      margin-bottom: 20px;
-    }
-    video, canvas, img {
-      border-radius: 12px;
-      box-shadow: 0 2px 15px rgba(0,0,0,0.15);
-      width: 320px;
-      height: 320px;
-      background: #111;
-      object-fit: cover;
-    }
-    #canvas {
-      display: none;
-    }
-    .avatar-container {
-      margin-top: 20px;
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      gap: 15px;
-    }
-    .avatar-container img {
-      border-radius: 50%;
-      width: 220px;
-      height: 220px;
-      box-shadow: 0 4px 25px rgba(0,0,0,0.25);
-      background: #222;
-    }
-    button {
-      margin: 15px 0;
-      background-color: #ff9800;
-      color: white;
-      border: none;
-      padding: 14px 40px;
-      font-size: 1.1rem;
-      border-radius: 30px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-    button:hover {
-      background-color: #e67600;
-    }
+    :root { --bg:#0b0f14; --panel:#121821; --accent:#71f79f; --muted:#9fb3c8; }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Ubuntu,Helvetica,Arial,sans-serif;background:var(--bg);color:#e9eef5}
+    header{padding:16px 20px;border-bottom:1px solid #1f2933;background:linear-gradient(180deg,#121821,#0b0f14)}
+    h1{margin:0;font-size:18px;letter-spacing:.3px}
+    .wrap{display:grid;grid-template-columns:360px 1fr;gap:14px;height:calc(100vh - 64px);padding:14px}
+    .left{background:var(--panel);border:1px solid #1f2933;border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
+    .left h2{margin:12px 12px 4px;font-size:14px;color:var(--muted)}
+    .iframeBox{position:relative;flex:1;min-height:420px;border-top:1px solid #1f2933}
+    .iframeBox iframe{position:absolute;inset:0;border:0;width:100%;height:100%}
+    .controls{padding:10px 12px;border-top:1px solid #1f2933;display:grid;gap:8px}
+    .controls label{font-size:12px;color:var(--muted)}
+    .btn{appearance:none;border:0;padding:10px 12px;border-radius:10px;background:#1f2933;color:#e9eef5;cursor:pointer}
+    .btn.primary{background:var(--accent);color:#0b0f14;font-weight:600}
+    .row{display:flex;gap:8px;align-items:center}
+    .right{background:var(--panel);border:1px solid #1f2933;border-radius:16px;position:relative;overflow:hidden}
+    canvas{display:block;width:100%;height:100%}
+    .status{position:absolute;left:12px;bottom:12px;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);padding:8px 10px;border-radius:10px;font-size:12px;color:#d1e5ff;border:1px solid rgba(255,255,255,.08)}
+    .badge{display:inline-block;padding:2px 6px;border-radius:999px;background:#102b18;color:#8efcb6;border:1px solid #2c4}
+    .file{display:inline-block}
   </style>
 </head>
 <body>
+  <header>
+    <h1>🛍️ Reality Shop — Selfie Avatar + Product Try‑On (WebGL)</h1>
+  </header>
 
-<h1>Capture Your Selfie Avatar</h1>
-<video id="video" autoplay playsinline></video>
-<button id="captureBtn">Capture Selfie</button>
+  <div class="wrap">
+    <section class="left">
+      <h2>1) Build your avatar (supports selfie)</h2>
+      <div class="iframeBox">
+        <!-- Replace YOUR_SUBDOMAIN with your Ready Player Me Hub subdomain for production. -->
+        <iframe id="rpmCreator" allow="camera *; microphone *" src="https://demo.readyplayer.me/avatar?frameApi&clearCache&avatarType=fullbody&quality=medium"></iframe>
+      </div>
+      <div class="controls">
+        <div class="row">
+          <button id="openSelfie" class="btn">📸 Start Selfie Flow</button>
+          <button id="randomize" class="btn">🎲 Randomize</button>
+          <button id="exportAvatar" class="btn primary">⬇️ Export Avatar</button>
+        </div>
+        <label>After export, your avatar appears on the right. You can then load a clothing GLB to try on.</label>
+        <div class="row">
+          <input type="file" id="clothesFile" class="file" accept=".glb,.gltf,model/gltf-binary,model/gltf+json" />
+          <button id="clearClothes" class="btn">🧹 Remove Clothes</button>
+        </div>
+        <div class="row">
+          <label class="badge" id="avatarState">No avatar yet</label>
+        </div>
+      </div>
+    </section>
 
-<div class="avatar-container" id="avatarContainer">
-  <img id="avatarImage" alt="Your Selfie Avatar" />
-  <button id="retakeBtn">Retake Selfie</button>
-</div>
+    <section class="right" id="viewport">
+      <div class="status" id="status">Waiting for avatar…</div>
+    </section>
+  </div>
 
-<canvas id="canvas"></canvas>
+  <script type="module">
+    import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+    import { OrbitControls } from 'https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+    import { GLTFLoader } from 'https://unpkg.com/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
+    import { DRACOLoader } from 'https://unpkg.com/three@0.160.0/examples/jsm/loaders/DRACOLoader.js';
 
-<script>
-  const video = document.getElementById('video');
-  const captureBtn = document.getElementById('captureBtn');
-  const retakeBtn = document.getElementById('retakeBtn');
-  const avatarContainer = document.getElementById('avatarContainer');
-  const avatarImage = document.getElementById('avatarImage');
-  const canvas = document.getElementById('canvas');
-  const ctx = canvas.getContext('2d');
+    const state = {
+      avatarUrl: null,
+      avatarRoot: null,
+      avatarSkeleton: null,
+      mixers: [],
+      clothesRoot: null
+    };
 
-  async function startCamera() {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
-      video.srcObject = stream;
-      await video.play();
-    } catch (err) {
-      alert('Cannot access webcam. Please allow camera permissions.');
-      console.error(err);
+    const statusEl = document.getElementById('status');
+    const badgeEl = document.getElementById('avatarState');
+
+    // ——— Three.js scene
+    const container = document.getElementById('viewport');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0b0f14);
+
+    const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+    camera.position.set(0.6, 1.7, 2.6);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer.setPixelRatio(devicePixelRatio);
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    container.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.set(0, 1.5, 0);
+    controls.enableDamping = true;
+
+    // lights
+    const hemi = new THREE.HemisphereLight(0xffffff, 0x223344, 0.8);
+    scene.add(hemi);
+    const key = new THREE.DirectionalLight(0xffffff, 1.0);
+    key.position.set(3, 5, 2);
+    scene.add(key);
+
+    // ground
+    const ground = new THREE.Mesh(
+      new THREE.CircleGeometry(3.5, 64),
+      new THREE.MeshStandardMaterial({ color: 0x0f1620, metalness: 0.0, roughness: 0.9 })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = 0;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    const loader = new GLTFLoader();
+    const draco = new DRACOLoader();
+    draco.setDecoderPath('https://www.gstatic.com/draco/v1/decoders/');
+    loader.setDRACOLoader(draco);
+
+    function setStatus(text){ statusEl.textContent = text; }
+
+    function resize(){
+      const w = container.clientWidth, h = container.clientHeight;
+      camera.aspect = w/h; camera.updateProjectionMatrix();
+      renderer.setSize(w,h);
     }
-  }
+    addEventListener('resize', resize);
 
-  function captureSelfie() {
-    if (video.videoWidth === 0 || video.videoHeight === 0) {
-      alert('Video not ready yet. Please try again in a moment.');
-      return;
+    function animate(){
+      requestAnimationFrame(animate);
+      const dt = Math.min(0.033, renderer.info.render.frame * 0 + 0.016); // stable
+      state.mixers.forEach(m => m.update(dt));
+      controls.update();
+      renderer.render(scene, camera);
     }
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    animate();
 
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
-    avatarImage.src = dataUrl;
+    // ——— Ready Player Me iFrame integration
+    const iframe = document.getElementById('rpmCreator');
 
-    avatarContainer.style.display = 'flex';
-    video.style.display = 'none';
-    captureBtn.style.display = 'none';
-  }
+    // helper to post messages to iFrame
+    function postToCreator(type, data={}){
+      iframe.contentWindow.postMessage({ target: 'readyplayerme', type, ...data }, '*');
+    }
 
-  function retakeSelfie() {
-    avatarContainer.style.display = 'none';
-    avatarImage.src = '';
-    video.style.display = 'block';
-    captureBtn.style.display = 'inline-block';
-  }
+    // Send subscribe message when frame ready
+    window.addEventListener('message', (event) => {
+      const msg = event.data;
+      if (!msg) return;
 
-  captureBtn.addEventListener('click', captureSelfie);
-  retakeBtn.addEventListener('click', retakeSelfie);
+      // v1.frame.ready
+      if (msg.source === 'readyplayerme' && msg.eventName === 'v1.frame.ready' || msg?.type === 'frameReady'){
+        postToCreator('subscribe', { eventName: 'v1.**' });
+        setStatus('Avatar Creator ready. Use selfie or customize, then Export.');
+      }
 
-  startCamera();
-</script>
+      // v1.avatar.exported (some versions send data without eventName wrapper)
+      const isExport = (msg.eventName === 'v1.avatar.exported') || (!!msg?.data?.url && !msg.eventName && !msg.type);
+      if (isExport){
+        const url = msg?.data?.url || msg.url; // support both shapes
+        if (url){
+          // request an optimized variant for the web
+          const optimized = url.includes('?') ? `${url}&meshLod=1&textureAtlas=1024` : `${url}?meshLod=1&textureAtlas=1024`;
+          loadAvatar(optimized);
+        }
+      }
+    });
 
+    document.getElementById('openSelfie').addEventListener('click', () => {
+      // Open selfie step in creator (if available in current flow)
+      postToCreator('open', { path: '/photo' });
+    });
+    document.getElementById('randomize').addEventListener('click', () => postToCreator('randomize'));
+    document.getElementById('exportAvatar').addEventListener('click', () => postToCreator('export'));
+
+    async function loadAvatar(url){
+      setStatus('Downloading avatar…');
+      badgeEl.textContent = 'Loading avatar…';
+
+      // clear old avatar & clothes
+      if (state.avatarRoot){ scene.remove(state.avatarRoot); state.avatarRoot.traverse(o=>{ if(o.material?.dispose) o.material.dispose(); if(o.geometry?.dispose) o.geometry.dispose(); }); }
+      if (state.clothesRoot){ scene.remove(state.clothesRoot); }
+      state.mixers = []; state.avatarSkeleton = null; state.avatarRoot = null; state.avatarUrl = url;
+
+      loader.load(url, (gltf) => {
+        const root = gltf.scene;
+        root.traverse(o=>{ if(o.isMesh){ o.castShadow = true; o.frustumCulled = false; }});
+
+        // Find skeleton from first skinned mesh
+        let skeleton = null;
+        root.traverse(o=>{ if(o.isSkinnedMesh && !skeleton){ skeleton = o.skeleton; }});
+        state.avatarSkeleton = skeleton;
+
+        // Try to play idle animation if provided
+        if (gltf.animations && gltf.animations.length){
+          const mixer = new THREE.AnimationMixer(root);
+          state.mixers.push(mixer);
+          const clip = gltf.animations[0];
+          const action = mixer.clipAction(clip);
+          action.play();
+        }
+
+        // Center & scale to unit height ~1.7m
+        const box = new THREE.Box3().setFromObject(root);
+        const size = new THREE.Vector3(); box.getSize(size);
+        const scale = 1.7 / size.y; root.scale.setScalar(scale);
+        box.setFromObject(root);
+        const center = box.getCenter(new THREE.Vector3());
+        root.position.sub(center.multiply(new THREE.Vector3(1,0,1))); // center on XZ
+
+        scene.add(root);
+        state.avatarRoot = root;
+        setStatus('Avatar loaded ✅ — now load a clothing GLB');
+        badgeEl.textContent = 'Avatar ready';
+      }, undefined, (err) => {
+        console.error(err);
+        setStatus('Failed to load avatar');
+        badgeEl.textContent = 'Avatar load failed';
+      });
+    }
+
+    // ——— Clothing loader
+    const clothesFile = document.getElementById('clothesFile');
+    clothesFile.addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file){ return; }
+
+      if (!state.avatarRoot){ setStatus('Load an avatar first.'); return; }
+
+      const url = URL.createObjectURL(file);
+      setStatus('Loading clothing…');
+      loader.load(url, (gltf) => {
+        // Remove previous clothes
+        if (state.clothesRoot){ scene.remove(state.clothesRoot); }
+
+        const clothes = gltf.scene;
+        clothes.traverse(o=>{ if(o.isMesh){ o.castShadow = true; o.material.skinning = true; }});
+
+        // Strategy A: if clothing is skinned to the RPM skeleton (recommended)
+        // bind every SkinnedMesh to avatar skeleton
+        let boundAny = false;
+        clothes.traverse(o => {
+          if (o.isSkinnedMesh && state.avatarSkeleton){
+            try { o.bind(state.avatarSkeleton, o.bindMatrix); boundAny = true; } catch(e){ console.warn('Bind failed', e); }
+          }
+        });
+
+        // Strategy B: if not skinned, parent under hips bone and allow manual nudge
+        if (!boundAny){
+          const hips = state.avatarRoot.getObjectByName('Hips') || state.avatarRoot;
+          hips.add(clothes);
+          clothes.position.set(0, 1.0, 0); // rough default
+          clothes.scale.setScalar(1.0);
+          setStatus('Clothing added (non‑skinned). You may need to pre‑fit the mesh to RPM in DCC.)');
+        } else {
+          // Attach clothes as a sibling of avatar so transforms match
+          clothes.position.copy(state.avatarRoot.position);
+          clothes.scale.copy(state.avatarRoot.scale);
+          scene.add(clothes);
+          setStatus('Clothing bound to avatar skeleton ✅');
+        }
+
+        state.clothesRoot = clothes;
+        URL.revokeObjectURL(url);
+      }, undefined, (err) => {
+        console.error(err);
+        setStatus('Failed to load clothing');
+      });
+    });
+
+    document.getElementById('clearClothes').addEventListener('click', () => {
+      if (state.clothesRoot){ scene.remove(state.clothesRoot); state.clothesRoot = null; setStatus('Clothing removed'); }
+    });
+  </script>
 </body>
 </html>
