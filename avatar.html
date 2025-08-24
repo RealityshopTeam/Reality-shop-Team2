@@ -2,105 +2,177 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Avatar Selfie - Reality Shop</title>
+  <title>3D Avatar Try-On Prototype</title>
   <style>
-    body {
-      font-family: Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 0;
-      display: flex; flex-direction: column; align-items: center; min-height: 100vh;
+    body, html {
+      margin:0; padding:0; overflow:hidden; background:#222; color:white; font-family: Arial, sans-serif;
+      display: flex; flex-direction: row; height: 100vh;
     }
-    h1 { margin-top: 36px; margin-bottom: 16px; }
-    video, canvas {
-      border-radius: 12px;
-      box-shadow: 0 2px 15px rgba(0,0,0,0.15);
-      width: 320px;
-      height: 320px;
-      margin-bottom: 12px;
+    #video-container {
+      flex: 1;
+      display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+      padding: 10px;
+      box-sizing: border-box;
       background: #111;
-      object-fit: cover;
     }
-    .avatar-selfie {
-      margin-top: 32px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
+    #video {
+      width: 320px; height: 240px; border-radius: 12px; margin-bottom: 12px; background: black;
+      transform: scaleX(-1); /* mirror */
     }
-    .avatar-img {
-      border-radius: 50%;
-      width: 200px;
-      height: 200px;
-      object-fit: cover;
-      box-shadow: 0 4px 25px rgba(0,0,0,0.25);
+    #canvas {
+      visibility: hidden;
+      position: absolute;
+    }
+    #avatar-container {
+      flex: 2;
+      position: relative;
+      background: #333;
+    }
+    #three-canvas {
+      width: 100%; height: 100vh; display: block;
+    }
+    #clothing-buttons {
+      position: absolute; top: 10px; left: 10px;
+      display: flex; flex-direction: column; gap: 12px;
+      background: rgba(0,0,0,0.5);
+      padding: 10px;
+      border-radius: 8px;
     }
     button {
-      background-color: #ff9800;
-      color: white;
-      border: none;
-      padding: 12px 32px;
-      font-size: 1.05rem;
-      border-radius: 25px;
-      cursor: pointer;
-      margin-top: 12px;
-      transition: background 0.2s;
+      cursor: pointer; background: #ff9800; border: none; padding: 8px 14px; border-radius: 6px; font-weight: bold;
+      color: black;
     }
     button:hover { background: #e67600; }
   </style>
+
+  <!-- TensorFlow.js and facemesh -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/facemesh"></script>
+
+  <!-- Three.js -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.148.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.148.0/examples/js/loaders/GLTFLoader.js"></script>
 </head>
 <body>
 
-  <h1>Take Your Avatar Selfie</h1>
-  <video id="video" autoplay playsinline></video>
-  <button id="captureBtn">Capture Selfie</button>
-
-  <div class="avatar-selfie" style="display:none;" id="resultSection">
-    <img id="avatarImg" class="avatar-img" src="" alt="Your Avatar Selfie">
-    <button onclick="retakeSelfie()">Retake</button>
+  <div id="video-container">
+    <h2>Step 1: Position your face in the webcam</h2>
+    <video id="video" autoplay muted></video>
+    <canvas id="canvas" width="320" height="240"></canvas>
   </div>
-  <canvas id="canvas" style="display:none;"></canvas>
+
+  <div id="avatar-container">
+    <canvas id="three-canvas"></canvas>
+    <div id="clothing-buttons">
+      <button onclick="changeClothing('shirt1.glb')">Try Shirt 1</button>
+      <button onclick="changeClothing('shirt2.glb')">Try Shirt 2</button>
+      <button onclick="changeClothing('hat1.glb')">Try Hat 1</button>
+    </div>
+  </div>
 
   <script>
+    // Webcam and FaceMesh Setup
     const video = document.getElementById('video');
-    const captureBtn = document.getElementById('captureBtn');
     const canvas = document.getElementById('canvas');
-    const avatarImg = document.getElementById('avatarImg');
-    const resultSection = document.getElementById('resultSection');
+    const ctx = canvas.getContext('2d');
+    let facemeshModel;
 
-    // Start webcam
-    async function startCamera() {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-        video.srcObject = stream;
-        await video.play();
-      } catch (e) {
-        alert("Error accessing webcam. Please allow camera permissions.");
-        console.error(e);
+    async function initCamera() {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+      video.srcObject = stream;
+      await video.play();
+    }
+
+    async function loadFaceMeshModel() {
+      facemeshModel = await facemesh.load();
+    }
+
+    async function predictFace() {
+      if (!facemeshModel) return;
+      const predictions = await facemeshModel.estimateFaces(video, false);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      if (predictions.length > 0) {
+        for (const prediction of predictions) {
+          let keypoints = prediction.scaledMesh;
+          ctx.fillStyle = "cyan";
+          for (let i = 0; i < keypoints.length; i++) {
+            const [x, y] = keypoints[i];
+            ctx.beginPath();
+            ctx.arc(x, y, 1.5, 0, 2 * Math.PI);
+            ctx.fill();
+          }
+          // TODO: Use keypoints for morphing avatar face.
+        }
       }
+      requestAnimationFrame(predictFace);
     }
 
-    // Capture current frame as selfie avatar
-    function captureSelfie() {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const context = canvas.getContext('2d');
-      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    // Initialize Three.js Scene for Avatar
+    let scene, camera, renderer;
+    let avatarModel, clothingModel;
+    const canvas3d = document.getElementById('three-canvas');
+    const loader = new THREE.GLTFLoader();
 
-      // Show selfie
-      avatarImg.src = canvas.toDataURL('image/jpeg', 0.95);
-      resultSection.style.display = 'flex';
-      video.style.display = 'none';
-      captureBtn.style.display = 'none';
+    function initThree() {
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x222222);
+      camera = new THREE.PerspectiveCamera(35, window.innerWidth/window.innerHeight, 0.1, 1000);
+      camera.position.set(0, 1.6, 2);
+
+      renderer = new THREE.WebGLRenderer({canvas: canvas3d, antialias: true});
+      renderer.setSize(window.innerWidth * 2/3, window.innerHeight);
+      renderer.setClearColor(0x222222);
+
+      const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
+      light.position.set(0, 1, 0);
+      scene.add(light);
+
+      // Load your base avatar model (source to your avatar GLB)
+      loader.load('models/base_avatar.glb', gltf => {
+        avatarModel = gltf.scene;
+        avatarModel.position.set(0, 0, 0);
+        scene.add(avatarModel);
+        animate();
+      });
     }
 
-    // Retake selfie
-    function retakeSelfie() {
-      resultSection.style.display = 'none';
-      video.style.display = 'block';
-      captureBtn.style.display = 'inline-block';
+    let clothingCurrent;
+    function changeClothing(file) {
+      if (clothingCurrent) {
+        scene.remove(clothingCurrent);
+        clothingCurrent.traverse(child => {
+          if (child.geometry) child.geometry.dispose();
+          if (child.material) child.material.dispose();
+        });
+        clothingCurrent = null;
+      }
+      loader.load(`models/${file}`, gltf => {
+        clothingCurrent = gltf.scene;
+        clothingCurrent.position.set(0, 0, 0);
+        scene.add(clothingCurrent);
+      });
     }
 
-    captureBtn.addEventListener('click', captureSelfie);
+    function animate() {
+      requestAnimationFrame(animate);
+      if (avatarModel) avatarModel.rotation.y += 0.005;
+      if (clothingCurrent) clothingCurrent.rotation.y += 0.005;
+      renderer.render(scene, camera);
+    }
 
-    startCamera();
+    window.addEventListener('resize', () => {
+      camera.aspect = (window.innerWidth * 2/3) / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth * 2/3, window.innerHeight);
+    });
+
+    // Initialize everything
+    initCamera();
+    loadFaceMeshModel().then(predictFace);
+    initThree();
   </script>
 </body>
 </html>
