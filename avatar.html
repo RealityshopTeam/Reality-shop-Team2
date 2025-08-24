@@ -43,17 +43,20 @@
     <option value="overall">Overall</option>
   </select>
 
-  <!-- DiceBear Avatars v4 -->
-  <script src="https://cdn.jsdelivr.net/npm/@dicebear/avatars@4.10.1/dist/avatars.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@dicebear/avatars-avataaars-sprites@4.10.1/dist/avatars-avataaars-sprites.min.js"></script>
+  <!-- DiceBear v4 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@dicebear/avatars@4.10.1/dist/index.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@dicebear/avatars-avataaars-sprites@4.10.1/dist/index.min.js"></script>
 
   <script>
     const avatarContainer = document.getElementById('avatarContainer');
     const hairSelect = document.getElementById('hairStyle');
     const clotheSelect = document.getElementById('clotheType');
 
+    const style = window.dicebearAvatarsAvataaars; // sprite set
+    const avatars = window.dicebearAvatars;        // generator
+
     function renderAvatar() {
-      const svg = window.dicebear.avatars.createAvatar(window.dicebear.avatarsAvataaars, {
+      const svg = avatars.create(style, {
         top: [hairSelect.value],
         hairColor: ["BrownDark"],
         clothes: [clotheSelect.value],
@@ -64,7 +67,7 @@
         skin: ["Light"]
       });
 
-      avatarContainer.innerHTML = svg;
+      avatarContainer.innerHTML = svg; // inject SVG directly
     }
 
     hairSelect.addEventListener('change', renderAvatar);
