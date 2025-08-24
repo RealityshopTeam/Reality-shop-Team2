@@ -2,96 +2,89 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>3D Avatar - Reality Shop</title>
-  <script type="module" src="https://unpkg.com/three@0.150.1/build/three.module.js"></script>
-  <script type="module" src="https://unpkg.com/three@0.150.1/examples/jsm/loaders/GLTFLoader.js"></script>
+  <title>3D Avatar Viewer - Reality Shop</title>
   <style>
     body {
       margin: 0;
-      overflow: hidden;
       background: #f0f2f5;
+      overflow: hidden;
     }
-    canvas {
-      display: block;
-    }
-    #controls {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      background: white;
-      padding: 10px;
-      border-radius: 8px;
+    #avatarContainer {
+      width: 100vw;
+      height: 100vh;
     }
   </style>
 </head>
 <body>
-  <div id="controls">
-    <label>Hair Color:
-      <input type="color" id="hairColor" value="#2c1b0e">
-    </label><br><br>
-    <label>Skin Color:
-      <input type="color" id="skinColor" value="#f1c27d">
-    </label>
-  </div>
+  <div id="avatarContainer"></div>
 
-  <script type="module">
-    import * as THREE from 'https://unpkg.com/three@0.150.1/build/three.module.js';
-    import { GLTFLoader } from 'https://unpkg.com/three@0.150.1/examples/jsm/loaders/GLTFLoader.js';
+  <!-- Three.js + GLTFLoader -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/examples/js/loaders/GLTFLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.150.1/examples/js/controls/OrbitControls.js"></script>
 
+  <script>
+    // Scene setup
+    const container = document.getElementById("avatarContainer");
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(
+      45,
+      container.clientWidth / container.clientHeight,
+      0.1,
+      1000
+    );
     camera.position.set(0, 1.6, 3);
 
-    const renderer = new THREE.WebGLRenderer({antialias: true});
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    container.appendChild(renderer.domElement);
 
-    const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
-    scene.add(light);
+    // Lighting
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
+    hemiLight.position.set(0, 1, 0);
+    scene.add(hemiLight);
 
     const dirLight = new THREE.DirectionalLight(0xffffff, 1);
-    dirLight.position.set(2, 5, 3);
+    dirLight.position.set(3, 10, 10);
     scene.add(dirLight);
 
-    let avatar;
-    const loader = new GLTFLoader();
-    loader.load("baseAvatar.glb", (gltf) => {
-      avatar = gltf.scene;
-      avatar.scale.set(1.2, 1.2, 1.2);
-      scene.add(avatar);
+    // Controls
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+
+    // Load GLB avatar
+    const loader = new THREE.GLTFLoader();
+    loader.load(
+      "baseAvatar.glb", // make sure this file exists in same folder
+      function (gltf) {
+        const model = gltf.scene;
+        model.scale.set(1.5, 1.5, 1.5); // adjust size
+        model.position.set(0, 0, 0);
+        scene.add(model);
+      },
+      function (xhr) {
+        console.log((xhr.loaded / xhr.total * 100) + "% loaded");
+      },
+      function (error) {
+        console.error("Error loading GLB:", error);
+      }
+    );
+
+    // Resize handling
+    window.addEventListener("resize", () => {
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
     });
 
-    // Update colors
-    document.getElementById("hairColor").addEventListener("input", (e) => {
-      if (!avatar) return;
-      avatar.traverse((child) => {
-        if (child.isMesh && child.material.name.toLowerCase().includes("hair")) {
-          child.material.color.set(e.target.value);
-        }
-      });
-    });
-
-    document.getElementById("skinColor").addEventListener("input", (e) => {
-      if (!avatar) return;
-      avatar.traverse((child) => {
-        if (child.isMesh && child.material.name.toLowerCase().includes("skin")) {
-          child.material.color.set(e.target.value);
-        }
-      });
-    });
-
+    // Animation loop
     function animate() {
       requestAnimationFrame(animate);
-      if (avatar) avatar.rotation.y += 0.003; // Slow rotation
+      controls.update();
       renderer.render(scene, camera);
     }
     animate();
-
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    });
   </script>
 </body>
 </html>
