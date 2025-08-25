@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Wishlist - Reality Shop</title>
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
   <style>
     body {
       font-family: 'Segoe UI', Arial, sans-serif;
@@ -73,23 +74,41 @@
       display: flex;
       align-items: center;
       gap: 20px;
+      min-width: 0;
+      flex: 1 1 0;
     }
-    .item-img {
-      width: 80px;
-      height: 80px;
-      border-radius: 8px;
-      object-fit: contain;
+    .thumb-box {
+      width: 100px;
+      height: 100px;
+      border-radius: 10px;
       background: #ebebeb;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       margin-right: 18px;
+      flex-shrink: 0;
+    }
+    .thumb-box img, .thumb-box model-viewer {
+      width: 100px;
+      height: 100px;
+      object-fit: contain;
+      border-radius: 10px;
+      background: #fafafa;
+      display: block;
     }
     .item-meta {
       display: flex;
       flex-direction: column;
       gap: 5px;
+      min-width: 0;
+      flex: 1 1 0;
+      overflow: hidden;
     }
     .item-name {
       font-weight: bold;
       font-size: 1.1rem;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .item-category {
       font-size: 0.95rem;
@@ -142,12 +161,8 @@
       </ul>
     </div>
   </nav>
-
   <h1>Your Wishlist</h1>
-  <div class="wishlist-container" id="wishlistContainer">
-    <!-- Wishlist items load here -->
-  </div>
-
+  <div class="wishlist-container" id="wishlistContainer"></div>
   <script>
     function getWishlist() {
       return JSON.parse(localStorage.getItem('wishlist') || '[]');
@@ -155,13 +170,12 @@
     function setWishlist(wishlist) {
       localStorage.setItem('wishlist', JSON.stringify(wishlist));
     }
-    // Render wishlist
     function renderWishlist() {
       const container = document.getElementById('wishlistContainer');
       const wishlist = getWishlist();
       container.innerHTML = '';
 
-      if (wishlist.length === 0) {
+      if(wishlist.length === 0) {
         container.innerHTML = '<div class="empty-msg">No items in your wishlist.</div>';
         return;
       }
@@ -169,12 +183,20 @@
       wishlist.forEach((item, idx) => {
         const div = document.createElement('div');
         div.className = 'wishlist-item';
+
+        // Thumbnail logic
+        let thumbHTML = '';
+        if(item.glb) {
+          thumbHTML = `<model-viewer src="${item.glb}" alt="${item.name} 3D" auto-rotate camera-controls shadow-intensity="1"></model-viewer>`;
+        } else if(item.img) {
+          thumbHTML = `<img src="${item.img}" alt="${item.name}" />`;
+        } else {
+          thumbHTML = `<div style="width:100px;height:100px;background:#eee;line-height:100px;text-align:center;">No Image</div>`;
+        }
+
         div.innerHTML = `
           <div class="item-details">
-            ${item.img ? `<img class="item-img" src="${item.img}" alt="${item.name}">`
-              : item.glb ? `<div class="item-img" style="background:#eee;display:flex;align-items:center;justify-content:center;">3D</div>`
-              : `<div class="item-img"></div>`
-            }
+            <div class="thumb-box">${thumbHTML}</div>
             <div class="item-meta">
               <div class="item-name">${item.name}</div>
               <div class="item-category">${item.category || ''}</div>
@@ -182,10 +204,11 @@
             </div>
           </div>
           <div class="actions">
-            <button class="add-cart-btn">Add to Cart</button>
-            <button class="remove-btn">Remove</button>
+            <button class="add-cart-btn" type="button">Add to Cart</button>
+            <button class="remove-btn" type="button">Remove</button>
           </div>
         `;
+
         // Remove button handler
         div.querySelector('.remove-btn').onclick = () => {
           wishlist.splice(idx, 1);
@@ -196,10 +219,9 @@
         div.querySelector('.add-cart-btn').onclick = () => {
           let cart = JSON.parse(localStorage.getItem('cart') || '[]');
           let existing = cart.find(p => p.name === item.name);
-          if (existing) existing.quantity += 1;
+          if(existing) existing.quantity += 1;
           else cart.push({ name: item.name, price: item.price, quantity: 1 });
           localStorage.setItem('cart', JSON.stringify(cart));
-          // Optionally remove after adding to cart
           wishlist.splice(idx, 1);
           setWishlist(wishlist);
           renderWishlist();
@@ -208,7 +230,6 @@
         container.appendChild(div);
       });
     }
-    // Initial Load
     renderWishlist();
   </script>
 </body>
