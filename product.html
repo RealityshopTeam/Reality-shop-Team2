@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <title>Product Details - Reality Shop</title>
 <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <style>
   body { margin: 0; font-family: 'Segoe UI', Arial, sans-serif; background: #f6f6f6; color: #222; }
   nav { background-color: #212121; padding: 0 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
@@ -19,7 +20,34 @@
   .product-info { width: 100%; max-width: 700px; }
   .product-info h1 { margin-top: 0; font-size: 2rem; }
   .product-info p.price { font-weight: bold; font-size: 1.5rem; color: #ff9800; margin: 10px 0 8px; }
-  .rating { font-size: 1.3rem; color: #ff9800; margin-bottom: 18px; }
+  .star-rating {
+    display: inline-block;
+    font-size: 1.6rem;
+    unicode-bidi: bidi-override;
+    direction: rtl;
+    margin-bottom: 10px;
+  }
+  .star-rating > span {
+    display: inline-block;
+    position: relative;
+    color: #ff9800;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+  .star-rating > span.inactive { color: #ddd; }
+  .star-rating > span:hover,
+  .star-rating > span:hover ~ span {
+    color: #ffa500;
+  }
+  .star-rating.readonly > span { cursor: default; }
+  .rating-value {
+    font-size: 1rem;
+    color: #ff9800;
+    margin-left: 8px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+  }
+
   .product-info button, .ar-button, .tryon-button {
     background: #ff9800;
     color: #fff;
@@ -113,13 +141,10 @@
     {name: "Sun Glass", price: 299, glb: "imgs/sunglas.glb", category: "Accessories", info:"UV400 lenses, modern aviator design."},
     {name: "Head Phones", price: 899, glb: "imgs/head phone.glb", category: "Electronics", info:"Wireless, noise-cancelling, deep bass."}
   ];
-  // --- Helper: Make random rating (for demo) ---
-  function getRatingFor(name) {
-    // For consistency, use product name as hash seed
-    let hash = 0; for (let i=0; i<name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) % 1000;
-    const stars = Math.floor(4 + (hash % 11) / 10); // 4 or 5 stars
-    const decimals = (hash % 10) < 3 ? ".5" : ""; // sometimes 4.5, 5.0 etc
-    return {stars, decimals, html: stars + decimals + " " + "★".repeat(stars) + (decimals ? "½" : "")};
+
+  function getQueryParam(param) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(param);
   }
   function getWishlist() {
     return JSON.parse(localStorage.getItem('wishlist') || '[]');
@@ -129,6 +154,40 @@
   }
   function isWishlisted(name) {
     return getWishlist().some(item => item.name === name);
+  }
+  function getProductRatingKey(name) {
+    return "product-rating-" + name;
+  }
+  function getProductRating(name) {
+    // Get the saved star count (integer 1-5); <0 if not rated
+    return +(localStorage.getItem(getProductRatingKey(name)) || 0);
+  }
+  function setProductRating(name, rating) {
+    localStorage.setItem(getProductRatingKey(name), rating);
+  }
+
+  function renderRatingStars(name, rootEl, readonly=false) {
+    // Remove any previous rating container
+    rootEl.innerHTML = "";
+    const ratingValue = getProductRating(name);
+    for (let i = 5; i >= 1; i--) {
+      const span = document.createElement('span');
+      span.className = 'fa fa-star ' + (ratingValue >= i ? "" : "inactive");
+      if (!readonly) {
+        span.style.cursor = "pointer";
+        span.onclick = function() {
+          setProductRating(name, i);
+          renderRatingStars(name, rootEl, false);
+          // Update the numeric value text after stars
+          const rateVal = rootEl.nextElementSibling;
+          if (rateVal && rateVal.classList.contains("rating-value")) {
+            rateVal.textContent = `Your Rating: ${i}/5`;
+          }
+        };
+      }
+      span.title = i + " star";
+      rootEl.appendChild(span);
+    }
   }
 
   function displayProduct(product) {
@@ -142,7 +201,11 @@
     const canTryOnAvatar = ["Clothing", "Accessories"].includes(product.category);
     const tryOnHtml = (canTryOnAvatar && (product.img || product.glb))
       ? `<button class="tryon-button" onclick="openTryOn('${encodeURIComponent(product.name)}','${product.img ? encodeURIComponent(product.img) : ""}','${product.glb ? encodeURIComponent(product.glb) : ""}')">Try On Avatar</button>` : '';
-    const rating = getRatingFor(product.name);
+
+    const ratingMarkup = `
+      <div class="star-rating" id="starRating"></div>
+      <span class="rating-value" id="ratingValue"></span>
+    `;
     container.innerHTML = `
       ${product.glb ? `
         <model-viewer 
@@ -172,11 +235,17 @@
           ${tryOnHtml}
         </div>
         <p class="price">₹${product.price}.00</p>
-        <div class="rating">${rating.html}</div>
+        ${ratingMarkup}
         <p style="margin-bottom:16px;">${product.info || ''}</p>
         <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean euismod bibendum laoreet. Proin gravida dolor sit amet lacus accumsan.</p>
       </div>
     `;
+
+    // Render stars and value, and update when rated
+    renderRatingStars(product.name, document.getElementById('starRating'), false);
+    const saved = getProductRating(product.name);
+    document.getElementById('ratingValue').textContent = saved>0 ? `Your Rating: ${saved}/5` : "Not rated yet";
+
     document.getElementById('add-cart-btn').onclick = () => {
       let cart = JSON.parse(localStorage.getItem('cart') || '[]');
       let existing = cart.find(item => item.name === product.name);
@@ -222,7 +291,7 @@
     (related.length ? related : products.filter(p => p.name !== product.name).slice(0, 4)).forEach(p => {
       const row = document.createElement('div');
       row.className = 'related-product-row';
-      const rating = getRatingFor(p.name);
+      const rating = getProductRating(p.name) || Math.floor(Math.random()*2)+4; // fallback fake avg 4/5
       row.innerHTML = `
         <div class="related-thumb">
           ${p.glb ? `<model-viewer src="${p.glb}" alt="${p.name}" camera-controls auto-rotate shadow-intensity="1"></model-viewer>`
@@ -232,7 +301,7 @@
         <div class="related-info" style="flex:1 1 0;">
           <h4>${p.name}</h4>
           <div class="price">₹${p.price}.00</div>
-          <div class="rating">${rating.html}</div>
+          <div class="rating">${"★".repeat(rating)}${"☆".repeat(5-rating)} (${rating}/5)</div>
           <div class="category">${p.category || ''}</div>
           <p>${p.info ? p.info : ''}</p>
         </div>
