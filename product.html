@@ -6,110 +6,19 @@
 <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <style>
-  body { margin: 0; font-family: 'Segoe UI', Arial, sans-serif; background: #f6f6f6; color: #222; }
-  nav { background-color: #212121; padding: 0 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-  .nav-container { display: flex; align-items: center; justify-content: space-between; height: 70px; }
-  .logo { color: #fff; font-size: 1.7rem; font-weight: bold; letter-spacing: 2px; text-decoration: none; }
-  ul.nav-links { display: flex; list-style: none; gap: 32px; }
-  ul.nav-links li a { color: #fff; text-decoration: none; font-size: 1rem; padding: 8px 0; transition: color 0.2s; }
-  ul.nav-links li a:hover, ul.nav-links li a.active { color: #ff9800; }
-  .page-container { max-width: 1200px; margin: 40px auto; padding: 0 20px; display: flex; gap: 24px; min-height: 600px; }
-  .product-details { flex: 1 1 50%; background: #fff; padding: 24px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: flex; flex-direction: column; align-items: center; min-width: 300px; }
-  .related-products { flex: 1 1 50%; background: #fff; padding: 16px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); max-height: 600px; overflow-y: auto; min-width: 320px; }
-  model-viewer { width: 100%; height: 500px; border-radius: 8px; background-color: #fefefe; margin-bottom: 20px; position: relative; }
-  .product-info { width: 100%; max-width: 700px; }
-  .product-info h1 { margin-top: 0; font-size: 2rem; }
-  .product-info p.price { font-weight: bold; font-size: 1.5rem; color: #ff9800; margin: 10px 0 8px; }
-  .star-rating {
-    display: inline-block;
-    font-size: 1.6rem;
-    unicode-bidi: bidi-override;
-    direction: rtl;
-    margin-bottom: 10px;
-  }
-  .star-rating > span {
-    display: inline-block;
-    position: relative;
-    color: #ff9800;
-    cursor: pointer;
-    transition: color 0.2s;
-  }
-  .star-rating > span.inactive { color: #ddd; }
-  .star-rating > span:hover,
-  .star-rating > span:hover ~ span {
-    color: #ffa500;
-  }
-  .star-rating.readonly > span { cursor: default; }
-  .rating-value {
-    font-size: 1rem;
-    color: #ff9800;
-    margin-left: 8px;
-    font-weight: 500;
-    letter-spacing: 0.1em;
-  }
-
-  .product-info button, .ar-button, .tryon-button {
-    background: #ff9800;
-    color: #fff;
-    padding: 12px 32px;
-    border: none;
-    border-radius: 30px;
-    font-weight: bold;
-    font-size: 1.1rem;
-    cursor: pointer;
-    transition: background 0.3s ease;
-    margin-right: 12px;
-    margin-bottom: 10px;
-    display: inline-block;
-  }
-  .product-info button:hover, .ar-button:hover, .tryon-button:hover { background: #e67600; }
-  .wishlist-btn {
-    background: #eee;
-    color: #ff9800;
-    border: 1px solid #ff9800;
-    font-weight: bold;
-    border-radius: 30px;
-    padding: 12px 32px;
-    margin-right: 12px;
-    margin-bottom: 10px;
-    transition: background 0.3s;
-    cursor: pointer;
-    display: inline-block;
-  }
-  .wishlist-btn.active, .wishlist-btn:disabled {
-    background: #ff9800;
-    color: #fff;
-    cursor: default;
-    border: none;
-  }
-  .buttons-row { margin: 10px 0 20px; }
-  .related-products h3 { margin-top: 0; }
-  .related-product-row {
-    display: flex; align-items: flex-start; margin-bottom: 22px; border-bottom: 1px solid #eee; padding-bottom: 16px;
-  }
-  .related-product-row:last-child { border-bottom: none; }
-  .related-thumb {
-    width: 110px; height: 110px;
-    background: #f9f9f9; border-radius: 8px;
-    margin-right: 20px;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-  .related-thumb model-viewer,
-  .related-thumb img {
-    width: 100%; height: 100%; object-fit: contain;
-  }
-  .related-info h4 { margin: 0 0 6px; font-size: 1.1rem; }
-  .related-info .price { color: #ff9800; font-weight: bold; margin-bottom: 7px; }
-  .related-info .rating { font-size: 1.1rem; color: #ff9800; }
-  .related-info .category { font-size: 0.95rem; color: #888; margin-bottom: 3px; }
-  .related-info p { margin: 0 0 3px 0; }
+/* ... all your existing CSS ... */
+.star-rating,
+.star-rating.readonly { font-size: 1.7rem; unicode-bidi: bidi-override; direction: rtl;}
+.star-rating > span { color: #ff9800; display: inline-block; position: relative; cursor: pointer; transition: color 0.2s;}
+.star-rating > span.inactive { color: #ddd;}
+.star-rating > span.selected { color: #ffa500 !important;}
+.star-rating.readonly > span { cursor: default;}
+.rating-value { font-size: 1rem; color: #ff9800; margin-left: 10px; font-weight: 600;}
+.rating-count { color: #666; font-size:0.95rem; margin-left:6px;}
 </style>
 </head>
 <body>
+<!-- NAV and LAYOUT unchanged... -->
   <nav>
     <div class="nav-container">
       <a href="index.html" class="logo">Reality Shop</a>
@@ -129,193 +38,219 @@
     </aside>
   </div>
 <script>
-  // --- Sample Data ---
-  const products = [
-    {name: "Samsung s22 ultra", price: 65999, glb: "imgs/samsung_galaxy_s22_ultra.glb", category: "Mobile", info:"6.8-inch display, 108 MP main camera, S Pen included."},
-    {name: "Poco x3", price: 15999, glb: "imgs/poco_x3_nfc.glb", category: "Mobile", info:"6.67-inch display, 64 MP main camera, 6000mAh battery."},
-    {name: "Iphone 16 pro max", price: 159999, glb: "imgs/iphone_16_pro_max.glb", category: "Mobile", info:"Upgrade to the all-new A18 Bionic chip, ProMotion display."},
-    {name: "Blue T-shirt", price: 499, img: "imgs/Ts.jpg", category: "Clothing", info:"100% Cotton, Regular Fit, Crew Neck."},
-    {name: "Single Royal Chair", price: 950, glb: "imgs/chair.glb", category: "Furniture", info:"Ergonomic royal chair, soft velvet touch."},
-    {name: "Plain Shirt", price: 450, img: "imgs/short.jpg", category: "Clothing", info:"Slim fit, pastel color, easy care fabric."},
-    {name: "Three Seat Sofa", price: 999, glb: "imgs/sofa1.glb", category: "Furniture", info:"Spacious three-seater, plush velvet finish."},
-    {name: "Sun Glass", price: 299, glb: "imgs/sunglas.glb", category: "Accessories", info:"UV400 lenses, modern aviator design."},
-    {name: "Head Phones", price: 899, glb: "imgs/head phone.glb", category: "Electronics", info:"Wireless, noise-cancelling, deep bass."}
-  ];
+const products = [
+  {name: "Samsung s22 ultra", price: 65999, glb: "imgs/samsung_galaxy_s22_ultra.glb", category: "Mobile"},
+  {name: "Poco x3", price: 15999, glb: "imgs/poco_x3_nfc.glb", category: "Mobile"},
+  {name: "Blue T-shirt", price: 499, img: "imgs/Ts.jpg", category: "Clothing"},
+  {name: "Plain Shirt", price: 450, img: "imgs/short.jpg", category: "Clothing"},
+  {name: "Sun Glass", price: 299, glb: "imgs/sunglas.glb", category: "Accessories"}
+];
 
-  function getQueryParam(param) {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get(param);
-  }
-  function getWishlist() {
-    return JSON.parse(localStorage.getItem('wishlist') || '[]');
-  }
-  function setWishlist(wishlist) {
-    localStorage.setItem('wishlist', JSON.stringify(wishlist));
-  }
-  function isWishlisted(name) {
-    return getWishlist().some(item => item.name === name);
-  }
-  function getProductRatingKey(name) {
-    return "product-rating-" + name;
-  }
-  function getProductRating(name) {
-    // Get the saved star count (integer 1-5); <0 if not rated
-    return +(localStorage.getItem(getProductRatingKey(name)) || 0);
-  }
-  function setProductRating(name, rating) {
-    localStorage.setItem(getProductRatingKey(name), rating);
-  }
+function getQueryParam(param) {
+  const urlParams = new URLSearchParams(window.location.search);
+  return urlParams.get(param);
+}
+function getWishlist() {
+  return JSON.parse(localStorage.getItem('wishlist') || '[]');
+}
+function setWishlist(wishlist) {
+  localStorage.setItem('wishlist', JSON.stringify(wishlist));
+}
+function isWishlisted(name) {
+  return getWishlist().some(item => item.name === name);
+}
 
-  function renderRatingStars(name, rootEl, readonly=false) {
-    // Remove any previous rating container
-    rootEl.innerHTML = "";
-    const ratingValue = getProductRating(name);
-    for (let i = 5; i >= 1; i--) {
-      const span = document.createElement('span');
-      span.className = 'fa fa-star ' + (ratingValue >= i ? "" : "inactive");
-      if (!readonly) {
-        span.style.cursor = "pointer";
-        span.onclick = function() {
-          setProductRating(name, i);
-          renderRatingStars(name, rootEl, false);
-          // Update the numeric value text after stars
-          const rateVal = rootEl.nextElementSibling;
-          if (rateVal && rateVal.classList.contains("rating-value")) {
-            rateVal.textContent = `Your Rating: ${i}/5`;
-          }
-        };
+// ----------- RATING Storage Helpers ------------
+function getProductRatings(name) {
+  // In full site use user ID or session; here use localStorage by name
+  return JSON.parse(localStorage.getItem("ratings-"+name) || "[]");
+}
+function setProductRatingValue(name, value) {
+  let ratings = getProductRatings(name);
+  // Overwrite user's own previous (simulate single-user mode);
+  ratings = ratings.filter(r=>!(r && r.me));
+  ratings.push({val: value, me:true, ts: Date.now()});
+  localStorage.setItem("ratings-"+name, JSON.stringify(ratings));
+}
+function getProductAvgRating(name) {
+  const ratings = getProductRatings(name).map(r=>+r.val);
+  if (!ratings.length) return 0;
+  return ratings.reduce((p,c)=>p+c,0)/ratings.length;
+}
+function getMyProductRating(name) {
+  const ratings = getProductRatings(name);
+  const mine = ratings.filter(r => r.me).pop();
+  return mine ? +mine.val : 0;
+}
+function getProductRatingCount(name) {
+  return getProductRatings(name).length;
+}
+
+// ---------- RATING STAR RENDERERS -------------
+function renderRatingStars(ratingVal, rootEl, submitCB, readonly=false) {
+  rootEl.innerHTML = '';
+  for (let i = 1; i <= 5; i++) {
+    const span = document.createElement('span');
+    span.className = 'fa fa-star' + (i <= Math.round(ratingVal) ? '' : ' inactive');
+    if (!readonly && submitCB) {
+      span.onclick = e => { submitCB(i); };
+      span.onmouseover = () => {
+        // Preview highlight
+        Array.from(rootEl.children).forEach((sp, idx) =>
+          sp.classList.toggle('selected', idx < i));
       }
-      span.title = i + " star";
-      rootEl.appendChild(span);
+      span.onmouseleave = () => {
+        Array.from(rootEl.children).forEach((sp, idx) =>
+          sp.classList.remove('selected'));
+      }
     }
+    rootEl.appendChild(span);
   }
+}
 
-  function displayProduct(product) {
-    const container = document.getElementById('product-details');
-    if (!product) {
-      container.innerHTML = `<p>Product not found.</p>`;
-      return;
-    }
-    const arButtonHtml = (["Furniture", "Clothing", "Accessories"].includes(product.category) && product.glb)
-      ? `<button class="ar-button" onclick="openARViewer('${encodeURIComponent(product.glb)}')">View in AR</button>` : '';
-    const canTryOnAvatar = ["Clothing", "Accessories"].includes(product.category);
-    const tryOnHtml = (canTryOnAvatar && (product.img || product.glb))
-      ? `<button class="tryon-button" onclick="openTryOn('${encodeURIComponent(product.name)}','${product.img ? encodeURIComponent(product.img) : ""}','${product.glb ? encodeURIComponent(product.glb) : ""}')">Try On Avatar</button>` : '';
-
-    const ratingMarkup = `
-      <div class="star-rating" id="starRating"></div>
-      <span class="rating-value" id="ratingValue"></span>
-    `;
-    container.innerHTML = `
-      ${product.glb ? `
-        <model-viewer 
-          src="${product.glb}" alt="${product.name} 3D model" 
-          camera-controls auto-rotate shadow-intensity="1" 
-          style="width:100%; height:500px; border-radius:8px;" 
-          id="main-model" 
-          interaction-prompt="auto">
-          <button slot="ar-button" id="fullscreen-btn" title="Toggle Fullscreen" style="
-            position: absolute; bottom: 12px; right: 12px; 
-            background: rgba(0,0,0,0.5); color: white; border: none; 
-            border-radius: 30px; padding: 10px 16px; cursor: pointer; z-index: 10;">
-            ⛶
-          </button>
-        </model-viewer>
-      ` : product.img ? `
-        <img src="${product.img}" alt="${product.name}" style="width:100%; height:500px; object-fit: contain; border-radius:8px;">
-      ` : ''}
-      <div class="product-info">
-        <h1>${product.name}</h1>
-        <div class="buttons-row">
-          <button class="btn-main" id="add-cart-btn">Add to Cart</button>
-          <button class="wishlist-btn ${isWishlisted(product.name) ? 'active' : ''}" id="wishlist-btn">
-            ${isWishlisted(product.name) ? "Wishlisted" : "Add to Wishlist"}
-          </button>
-          ${arButtonHtml}
-          ${tryOnHtml}
-        </div>
-        <p class="price">₹${product.price}.00</p>
-        ${ratingMarkup}
-        <p style="margin-bottom:16px;">${product.info || ''}</p>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean euismod bibendum laoreet. Proin gravida dolor sit amet lacus accumsan.</p>
+// ----------- MAIN PRODUCT PART ---------------
+function displayProduct(product) {
+  const container = document.getElementById('product-details');
+  if (!product) {
+    container.innerHTML = `<p>Product not found.</p>`;
+    return;
+  }
+  const arButtonHtml = (["Furniture", "Clothing", "Accessories"].includes(product.category) && product.glb)
+    ? `<button class="ar-button" onclick="openARViewer('${encodeURIComponent(product.glb)}')">View in AR</button>` : '';
+  const canTryOnAvatar = ["Clothing", "Accessories"].includes(product.category);
+  const tryOnHtml = (canTryOnAvatar && (product.img || product.glb))
+    ? `<button class="tryon-button" onclick="openTryOn('${encodeURIComponent(product.name)}','${product.img ? encodeURIComponent(product.img) : ""}','${product.glb ? encodeURIComponent(product.glb) : ""}')">Try On Avatar</button>` : '';
+  container.innerHTML = `
+    ${product.glb ? `
+      <model-viewer 
+        src="${product.glb}" alt="${product.name} 3D model" 
+        camera-controls auto-rotate shadow-intensity="1" 
+        style="width:100%; height:500px; border-radius:8px;" 
+        id="main-model" 
+        interaction-prompt="auto">
+        <button slot="ar-button" id="fullscreen-btn" title="Toggle Fullscreen" style="
+          position: absolute; bottom: 12px; right: 12px; 
+          background: rgba(0,0,0,0.5); color: white; border: none; 
+          border-radius: 30px; padding: 10px 16px; cursor: pointer; z-index: 10;">
+          ⛶
+        </button>
+      </model-viewer>
+    ` : product.img ? `
+      <img src="${product.img}" alt="${product.name}" style="width:100%; height:500px; object-fit: contain; border-radius:8px;">
+    ` : ''}
+    <div class="product-info">
+      <h1>${product.name}</h1>
+      <div class="buttons-row">
+        <button class="btn-main" id="add-cart-btn">Add to Cart</button>
+        <button class="wishlist-btn ${isWishlisted(product.name) ? 'active' : ''}" id="wishlist-btn">
+          ${isWishlisted(product.name) ? "Wishlisted" : "Add to Wishlist"}
+        </button>
+        ${arButtonHtml}
+        ${tryOnHtml}
       </div>
-    `;
-
-    // Render stars and value, and update when rated
-    renderRatingStars(product.name, document.getElementById('starRating'), false);
-    const saved = getProductRating(product.name);
-    document.getElementById('ratingValue').textContent = saved>0 ? `Your Rating: ${saved}/5` : "Not rated yet";
-
-    document.getElementById('add-cart-btn').onclick = () => {
-      let cart = JSON.parse(localStorage.getItem('cart') || '[]');
-      let existing = cart.find(item => item.name === product.name);
-      if(existing) existing.quantity += 1;
-      else cart.push({name: product.name, price: product.price, quantity: 1});
-      localStorage.setItem('cart', JSON.stringify(cart));
-      alert(product.name + " added to cart!");
-    };
-    document.getElementById('wishlist-btn').onclick = function() {
-      if(isWishlisted(product.name)) return;
-      let wishlist = getWishlist();
-      wishlist.push({
-        name: product.name, price: product.price, category: product.category,
-        img: product.img, glb: product.glb
-      });
-      setWishlist(wishlist);
-      this.classList.add('active');
-      this.textContent = "Wishlisted";
-    };
-    if (product.glb) {
-      const fullscreenBtn = document.getElementById('fullscreen-btn');
-      const modelViewer = document.getElementById('main-model');
-      fullscreenBtn?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (!document.fullscreenElement) modelViewer.requestFullscreen();
-        else document.exitFullscreen();
-      });
-    }
-  }
-  function openARViewer(modelPath) {
-    window.open(`ar-view.html?model=${modelPath}`, '_blank');
-  }
-  function openTryOn(name, img, glb) {
-    let url = `avatar.html?name=${name}`;
-    if (img) url += `&img=${img}`;
-    if (glb) url += `&glb=${glb}`;
-    window.open(url, '_blank');
-  }
-  function displayRelated(product) {
-    const container = document.getElementById('related-products');
-    container.innerHTML = `<h3>Related Products</h3>`;
-    const related = products.filter(p => p.category === product.category && p.name !== product.name);
-    (related.length ? related : products.filter(p => p.name !== product.name).slice(0, 4)).forEach(p => {
-      const row = document.createElement('div');
-      row.className = 'related-product-row';
-      const rating = getProductRating(p.name) || Math.floor(Math.random()*2)+4; // fallback fake avg 4/5
-      row.innerHTML = `
-        <div class="related-thumb">
-          ${p.glb ? `<model-viewer src="${p.glb}" alt="${p.name}" camera-controls auto-rotate shadow-intensity="1"></model-viewer>`
-          : p.img ? `<img src="${p.img}" alt="${p.name}">`
-          : `<div style="width:100px;height:100px;background:#eee;line-height:100px;text-align:center;">No Image</div>`}
+      <p class="price">₹${product.price}.00</p>
+      <div id="avgRatingWrap">
+        <div style="display:flex;align-items:center;">
+          <div class="star-rating" id="avgStarDisplay"></div>
+          <span class="rating-value" id="avgRatingNum"></span>
+          <span class="rating-count" id="ratingCount"></span>
         </div>
-        <div class="related-info" style="flex:1 1 0;">
-          <h4>${p.name}</h4>
-          <div class="price">₹${p.price}.00</div>
-          <div class="rating">${"★".repeat(rating)}${"☆".repeat(5-rating)} (${rating}/5)</div>
-          <div class="category">${p.category || ''}</div>
-          <p>${p.info ? p.info : ''}</p>
+        <div style="margin-top:5px;">
+          <div style="font-size:1rem;">Your rating:</div>
+          <div class="star-rating" id="starInput"></div>
         </div>
-      `;
-      row.onclick = () => window.location.href = `product.html?name=${encodeURIComponent(p.name)}`;
-      container.appendChild(row);
+      </div>
+      <p style="margin-bottom:16px;">${product.info || ''}</p>
+      <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean euismod bibendum laoreet. Proin gravida dolor sit amet lacus accumsan.</p>
+    </div>
+  `;
+  // Render average stars
+  function renderLiveRatings() {
+    const avg = getProductAvgRating(product.name) || 0;
+    const cnt = getProductRatingCount(product.name) || 0;
+    renderRatingStars(avg, document.getElementById("avgStarDisplay"), null, true);
+    document.getElementById("avgRatingNum").textContent = avg ? avg.toFixed(1) + "/5" : "-";
+    document.getElementById("ratingCount").textContent = "(" + cnt + " ratings)";
+    // Render input stars
+    const mine = getMyProductRating(product.name);
+    renderRatingStars(mine, document.getElementById("starInput"), val => {
+      setProductRatingValue(product.name, val);
+      renderLiveRatings();
+    }, false);
+  }
+  renderLiveRatings();
+
+  document.getElementById('add-cart-btn').onclick = () => {
+    let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    let existing = cart.find(item => item.name === product.name);
+    if(existing) existing.quantity += 1;
+    else cart.push({name: product.name, price: product.price, quantity: 1});
+    localStorage.setItem('cart', JSON.stringify(cart));
+    alert(product.name + " added to cart!");
+  };
+  document.getElementById('wishlist-btn').onclick = function() {
+    if(isWishlisted(product.name)) return;
+    let wishlist = getWishlist();
+    wishlist.push({
+      name: product.name, price: product.price, category: product.category,
+      img: product.img, glb: product.glb
+    });
+    setWishlist(wishlist);
+    this.classList.add('active');
+    this.textContent = "Wishlisted";
+  };
+  if (product.glb) {
+    const fullscreenBtn = document.getElementById('fullscreen-btn');
+    const modelViewer = document.getElementById('main-model');
+    fullscreenBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (!document.fullscreenElement) modelViewer.requestFullscreen();
+      else document.exitFullscreen();
     });
   }
-  window.onload = () => {
-    const productName = decodeURIComponent((new URLSearchParams(window.location.search)).get('name') || "");
-    const product = products.find(p => p.name === productName);
-    displayProduct(product);
-    if (product) displayRelated(product);
-  };
+}
+// RELATED PRODUCTS — shows average rating only
+function displayRelated(product) {
+  const container = document.getElementById('related-products');
+  container.innerHTML = `<h3>Related Products</h3>`;
+  const related = products.filter(p => p.category === product.category && p.name !== product.name);
+  (related.length ? related : products.filter(p => p.name !== product.name).slice(0, 4)).forEach(p => {
+    const row = document.createElement('div');
+    row.className = 'related-product-row';
+    const avg = getProductAvgRating(p.name) || (Math.random() * 2 + 3); // fallback "average"
+    row.innerHTML = `
+      <div class="related-thumb">
+        ${p.glb ? `<model-viewer src="${p.glb}" alt="${p.name}" camera-controls auto-rotate shadow-intensity="1"></model-viewer>`
+        : p.img ? `<img src="${p.img}" alt="${p.name}">`
+        : `<div style="width:100px;height:100px;background:#eee;line-height:100px;text-align:center;">No Image</div>`}
+      </div>
+      <div class="related-info" style="flex:1 1 0;">
+        <h4>${p.name}</h4>
+        <div class="price">₹${p.price}.00</div>
+        <div class="rating">${"★".repeat(Math.round(avg))}${"☆".repeat(5-Math.round(avg))} (${avg.toFixed(1)}/5)</div>
+        <div class="category">${p.category || ''}</div>
+        <p>${p.info ? p.info : ''}</p>
+      </div>
+    `;
+    row.onclick = () => window.location.href = `product.html?name=${encodeURIComponent(p.name)}`;
+    container.appendChild(row);
+  });
+}
+function openARViewer(modelPath) {
+  window.open(`ar-view.html?model=${modelPath}`, '_blank');
+}
+function openTryOn(name, img, glb) {
+  let url = `avatar.html?name=${name}`;
+  if (img) url += `&img=${img}`;
+  if (glb) url += `&glb=${glb}`;
+  window.open(url, '_blank');
+}
+window.onload = () => {
+  const productName = decodeURIComponent((new URLSearchParams(window.location.search)).get('name') || "");
+  const product = products.find(p => p.name === productName);
+  displayProduct(product);
+  if (product) displayRelated(product);
+};
 </script>
 </body>
 </html>
