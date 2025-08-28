@@ -2,101 +2,352 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>3D Avatar Display - Reality Shop</title>
+  <title>Advanced Avatar Creator - Reality Shop</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body, html {
-      margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
-      background-color: #121212;
-      display: flex; justify-content: center; align-items: center;
+    :root {
+      --pad: 12px;
     }
-    #viewer {
-      width: 100vw;
-      height: 100vh;
+    body {
+      margin: 0;
+      font-family: system-ui, Arial, sans-serif;
+      background: linear-gradient(135deg, #0b0d10 0%, #1c1f26 100%);
+      color: #e9eef3;
+      display: flex;
+      flex-direction: column;
+      min-height: 100dvh;
+      overflow: hidden;
+    }
+    nav {
+      padding: var(--pad) 32px;
+      background: #12151a;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    nav a.logo {
+      color: #ff9800;
+      font-weight: 700;
+      font-size: 1.75rem;
+      text-decoration: none;
+      letter-spacing: 2px;
+    }
+    main {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      flex-grow: 1;
+      padding: 20px;
+      justify-content: center;
+    }
+    section.controls {
+      background: #12161c;
+      padding: 20px;
+      border-radius: 12px;
+      width: 320px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    section.viewer {
+      flex: 1 1 600px;
+      min-width: 320px;
+      position: relative;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(255 152 0 / 0.3);
+      background: #181c21;
+      overflow: hidden;
+      height: 80vh;
+      max-height: 800px;
+    }
+    canvas, canvas:focus {
+      outline: none;
       display: block;
+      width: 100%;
+      height: 100%;
+      border-radius: 12px;
+    }
+    label, h2 {
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+    #uploadLabel {
+      cursor: pointer;
+      background: #2a3550;
+      padding: 10px 20px;
+      border-radius: 8px;
+      text-align: center;
+      user-select: none;
+      color: #eee;
+      transition: background 0.3s;
+    }
+    #uploadLabel:hover {
+      background: #ff9800;
+      color: #12151a;
+    }
+    input[type=file] {
+      display: none;
+    }
+    .color-picker {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .color-picker input[type=color] {
+      width: 40px;
+      height: 36px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+    }
+    button {
+      background: #ff9800;
+      border: none;
+      border-radius: 20px;
+      padding: 12px 24px;
+      color: #12151a;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.3s;
+      user-select: none;
+    }
+    button:disabled, button.disabled {
+      background: #555;
+      cursor: default;
+      color: #999;
+    }
+    button:hover:not(:disabled):not(.disabled) {
+      background: #e67600;
+    }
+    .reset-btn {
+      background: #662e00;
+      color: #ffb84d;
+    }
+    .reset-btn:hover {
+      background: #9d4b01;
+      color: #fff1d6;
+    }
+    .title {
+      font-size: 1.2rem;
+    }
+    .info-text {
+      font-size: 0.85rem;
+      color: #bbb;
     }
   </style>
 </head>
 <body>
-  <div id="viewer"></div>
+  <nav>
+    <a href="index.html" class="logo">Reality Shop</a>
+    <div class="info-text">Upload your selfie to generate a personalized avatar</div>
+  </nav>
+  <main>
+    <section class="controls" aria-label="Avatar customization controls">
+      <div>
+        <h2>1. Upload Selfie</h2>
+        <label for="selfieInput" id="uploadLabel">Choose file</label>
+        <input type="file" accept="image/*" id="selfieInput" aria-describedby="uploadDesc" />
+        <p id="uploadDesc" class="info-text">Use a clear frontal selfie for best results (JPG/PNG)</p>
+      </div>
+      <div>
+        <h2>2. Customize Colors</h2>
+        <div class="color-picker">
+          <label for="skinColor" class="title">Skin</label>
+          <input type="color" id="skinColor" value="#f2c9b9" aria-label="Skin color picker" />
+        </div>
+        <div class="color-picker">
+          <label for="hairColor" class="title">Hair</label>
+          <input type="color" id="hairColor" value="#472f20" aria-label="Hair color picker" />
+        </div>
+      </div>
+      <div>
+        <button id="applyColorsBtn" disabled aria-disabled="true">Apply Colors</button>
+        <button id="resetBtn" class="reset-btn">Reset Avatar</button>
+      </div>
+      <p class="info-text">Use mouse or touch to rotate and zoom the avatar</p>
+    </section>
+    <section class="viewer" role="main" aria-live="polite" aria-label="3D avatar preview">
+      <!-- Three.js canvas will be attached here -->
+    </section>
+  </main>
 
   <script type="module">
-    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
-    import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
-    import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+    import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
+    import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js";
+    import { OrbitControls } from "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js";
 
-    const container = document.getElementById('viewer');
+    // DOM elements
+    const selfieInput = document.getElementById("selfieInput");
+    const skinColorInput = document.getElementById("skinColor");
+    const hairColorInput = document.getElementById("hairColor");
+    const applyColorsBtn = document.getElementById("applyColorsBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const viewerSection = document.querySelector("section.viewer");
+
+    // Setup Three.js renderer
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth - 360, window.innerHeight - 100);
+    viewerSection.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 1.7, 3);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    container.appendChild(renderer.domElement);
+    const camera = new THREE.PerspectiveCamera(40, (window.innerWidth - 360) / (window.innerHeight - 100), 0.1, 100);
+    camera.position.set(0, 1.6, 3);
 
+    // Controls
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
 
-    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.5);
-    hemiLight.position.set(0, 20, 0);
-    scene.add(hemiLight);
-
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+    // Lights
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 1));
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
     dirLight.position.set(3, 10, 10);
     scene.add(dirLight);
 
-    const ground = new THREE.Mesh(
-      new THREE.CircleGeometry(5, 64),
-      new THREE.MeshStandardMaterial({ color: 0x0b0c11, metalness: 0, roughness: 1 })
-    );
-    ground.rotation.x = -Math.PI / 2;
-    ground.position.y = 0;
-    scene.add(ground);
+    // Floor plane for shadow receiving
+    const floorGeo = new THREE.CircleGeometry(10, 64);
+    const floorMat = new THREE.ShadowMaterial({ opacity: 0.3 });
+    const floor = new THREE.Mesh(floorGeo, floorMat);
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.y = 0;
+    floor.receiveShadow = true;
+    scene.add(floor);
 
+    renderer.shadowMap.enabled = true;
+    dirLight.castShadow = true;
+
+    // Variables
     const loader = new GLTFLoader();
+    let avatar = null;
+    let avatarOriginalMaterials = new Map();
 
-    let avatar;
-
-    loader.load('baseAvatar.glb',
-      (gltf) => {
-        avatar = gltf.scene;
-        scene.add(avatar);
-
-        // Center and scale avatar
-        const box = new THREE.Box3().setFromObject(avatar);
-        const size = new THREE.Vector3();
-        box.getSize(size);
-        const center = new THREE.Vector3();
-        box.getCenter(center);
-
-        const scale = 1.5 / Math.max(size.x, size.y, size.z);
-        avatar.scale.set(scale, scale, scale);
-        avatar.position.sub(center.multiplyScalar(scale));
-        avatar.position.y = 0;
-      },
-      undefined,
-      (error) => {
-        console.error('Error loading the avatar model:', error);
-        alert('Failed to load baseAvatar.glb model. Ensure the file is present in the same folder.');
+    // Load avatar
+    async function loadAvatar() {
+      if (avatar) {
+        scene.remove(avatar);
+        avatar.traverse(child => {
+          if (child.geometry) child.geometry.dispose();
+          if (child.material) child.material.dispose();
+        });
+        avatar = null;
       }
-    );
+      const gltf = await loader.loadAsync("baseAvatar.glb");
+      avatar = gltf.scene;
+      avatar.traverse(child => {
+        if (child.isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+          if (!(child.material instanceof THREE.MeshStandardMaterial)) {
+            child.material = new THREE.MeshStandardMaterial({ color: child.material.color });
+          }
+          avatarOriginalMaterials.set(child, child.material.color.clone());
+        }
+      });
+      // Center and scale avatar
+      const box = new THREE.Box3().setFromObject(avatar);
+      const size = new THREE.Vector3();
+      box.getSize(size);
+      const center = new THREE.Vector3();
+      box.getCenter(center);
+      const scale = 1.6 / Math.max(size.x, size.y, size.z);
+      avatar.scale.set(scale, scale, scale);
+      avatar.position.sub(center.multiplyScalar(scale));
+      avatar.position.y = 0;
+      scene.add(avatar);
+    }
 
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth/window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    });
+    // Utility to convert hex color to THREE.Color
+    const toThreeColor = hex => new THREE.Color(hex);
 
+    // Change materials color by name filter ('skin', 'hair')
+    function applyAvatarColors(skinHex, hairHex) {
+      if (!avatar) return;
+      avatar.traverse(child => {
+        if (child.isMesh && child.material) {
+          const name = (child.material.name || "").toLowerCase();
+          if (name.includes("skin")) {
+            child.material.color = toThreeColor(skinHex);
+            child.material.needsUpdate = true;
+          } else if (name.includes("hair")) {
+            child.material.color = toThreeColor(hairHex);
+            child.material.needsUpdate = true;
+          }
+        }
+      });
+    }
+
+    // Reset colors to original
+    function resetAvatarColors() {
+      if (!avatar) return;
+      avatar.traverse(child => {
+        if (child.isMesh && child.material && avatarOriginalMaterials.has(child)) {
+          child.material.color.copy(avatarOriginalMaterials.get(child));
+          child.material.needsUpdate = true;
+        }
+      });
+    }
+
+    // Animate loop
     function animate() {
       requestAnimationFrame(animate);
       controls.update();
-      if(avatar) avatar.rotation.y += 0.003;
       renderer.render(scene, camera);
     }
 
-    animate();
+    // Responsive resizing
+    function onWindowResize() {
+      const width = window.innerWidth - 360;
+      const height = window.innerHeight - 100;
+      renderer.setSize(width, height);
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+    }
+
+    // Initialization
+    (async function init() {
+      await loadAvatar();
+      animate();
+      onWindowResize();
+    })();
+
+    window.addEventListener("resize", onWindowResize);
+
+    // -- Color extraction logic for selfie --
+    // omitted for brevity but can be added here ...
+
+    // UI Logic
+    applyColorsBtn.disabled = true;
+
+    selfieInput.addEventListener("change", async e => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      // Here you can add your skin and hair color estimation logic, then:
+      // Example: loaded skin and hair colors (placeholder)
+      const estimatedSkinColor = "#f2c9b9";
+      const estimatedHairColor = "#472f20";
+
+      skinColorInput.value = estimatedSkinColor;
+      hairColorInput.value = estimatedHairColor;
+
+      applyColorsBtn.disabled = false;
+    });
+
+    applyColorsBtn.addEventListener("click", () => {
+      applyAvatarColors(skinColorInput.value, hairColorInput.value);
+    });
+
+    resetBtn.addEventListener("click", () => {
+      resetAvatarColors();
+    });
   </script>
 </body>
 </html>
