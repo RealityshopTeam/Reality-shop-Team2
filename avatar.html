@@ -145,7 +145,7 @@
 <body>
   <nav>
     <a href="index.html" class="logo">Reality Shop</a>
-    <div class="info-text">Upload your selfie to generate a personalized avatar</div>
+    <div class="info-text">Upload your selfie to generate a personalized avatar and customize it with advanced controls</div>
   </nav>
   <main>
     <section class="controls" aria-label="Avatar customization controls">
@@ -167,14 +167,12 @@
         </div>
       </div>
       <div>
-        <button id="applyColorsBtn" disabled aria-disabled="true">Apply Colors</button>
+        <button id="applyColorsBtn" disabled>Apply Colors</button>
         <button id="resetBtn" class="reset-btn">Reset Avatar</button>
       </div>
       <p class="info-text">Use mouse or touch to rotate and zoom the avatar</p>
     </section>
-    <section class="viewer" role="main" aria-live="polite" aria-label="3D avatar preview">
-      <!-- Three.js canvas will be attached here -->
-    </section>
+    <section class="viewer" role="main" aria-live="polite" aria-label="3D avatar preview"></section>
   </main>
 
   <script type="module">
@@ -193,12 +191,11 @@
     // Setup Three.js renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(window.innerWidth - 360, window.innerHeight - 100);
     viewerSection.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
 
-    const camera = new THREE.PerspectiveCamera(40, (window.innerWidth - 360) / (window.innerHeight - 100), 0.1, 100);
+    const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
     camera.position.set(0, 1.6, 3);
 
     // Controls
@@ -226,7 +223,7 @@
 
     // Variables
     const loader = new GLTFLoader();
-    let avatar = null;
+    let avatar;
     let avatarOriginalMaterials = new Map();
 
     // Load avatar
@@ -299,39 +296,30 @@
     function animate() {
       requestAnimationFrame(animate);
       controls.update();
-      renderer.render(scene, camera);
-    }
-
-    // Responsive resizing
-    function onWindowResize() {
-      const width = window.innerWidth - 360;
-      const height = window.innerHeight - 100;
-      renderer.setSize(width, height);
-      camera.aspect = width / height;
+      renderer.setSize(viewerSection.clientWidth, viewerSection.clientHeight);
+      camera.aspect = viewerSection.clientWidth / viewerSection.clientHeight;
       camera.updateProjectionMatrix();
+      renderer.render(scene, camera);
     }
 
     // Initialization
     (async function init() {
       await loadAvatar();
       animate();
-      onWindowResize();
     })();
 
-    window.addEventListener("resize", onWindowResize);
+    window.addEventListener("resize", () => {
+      renderer.setSize(viewerSection.clientWidth, viewerSection.clientHeight);
+      camera.aspect = viewerSection.clientWidth / viewerSection.clientHeight;
+      camera.updateProjectionMatrix();
+    });
 
-    // -- Color extraction logic for selfie --
-    // omitted for brevity but can be added here ...
-
-    // UI Logic
-    applyColorsBtn.disabled = true;
-
+    // Logic to estimate colors from selfie (simplified placeholder)
     selfieInput.addEventListener("change", async e => {
       const file = e.target.files[0];
       if (!file) return;
 
-      // Here you can add your skin and hair color estimation logic, then:
-      // Example: loaded skin and hair colors (placeholder)
+      // Simulated color extraction example
       const estimatedSkinColor = "#f2c9b9";
       const estimatedHairColor = "#472f20";
 
@@ -347,6 +335,7 @@
 
     resetBtn.addEventListener("click", () => {
       resetAvatarColors();
+      applyColorsBtn.disabled = true;
     });
   </script>
 </body>
