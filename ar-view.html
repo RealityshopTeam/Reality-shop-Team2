@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Reality Shop - AR Room View</title>
+  <title>Reality Shop - 3D Viewer Fallback</title>
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
   <style>
     html, body {
@@ -54,23 +54,17 @@
       id="arModelViewer"
       src=""
       alt="3D Furniture Model"
-      ar
-      ar-modes="scene-viewer quick-look webxr"
       camera-controls
       auto-rotate
       shadow-intensity="1"
       environment-image="neutral"
-      ar-scale="auto"
       interaction-prompt="tap-to-place"
-      xr-environment
-      xr-standard-shadows
     >
     </model-viewer>
     <div class="instructions" id="instructions">
-      Point your device to scan your room, tap to place furniture. Move and scale with gestures.
+      Loading model...
     </div>
   </div>
-
   <script>
     const modelViewer = document.getElementById('arModelViewer');
     const instructions = document.getElementById('instructions');
@@ -78,6 +72,12 @@
     function getQueryParam(param) {
       const urlParams = new URLSearchParams(window.location.search);
       return urlParams.get(param);
+    }
+
+    // Check if AR is supported by the device/browser
+    function isARSupported() {
+      // modelViewer.canActivateAR is true only when AR is supported and enabled
+      return modelViewer.canActivateAR === true;
     }
 
     window.onload = () => {
@@ -89,19 +89,24 @@
         modelViewer.style.display = 'none';
         return;
       }
+
+      // Modify behavior based on AR support
+      if (!isARSupported()) {
+        instructions.textContent = 'AR mode not supported on this device. Use 3D view mode.';
+        // Remove AR attributes to disable AR mode fallback
+        modelViewer.removeAttribute('ar');
+        modelViewer.removeAttribute('ar-modes');
+        modelViewer.removeAttribute('xr-environment');
+        modelViewer.removeAttribute('xr-standard-shadows');
+      } else {
+        // If AR supported, show default instruction
+        instructions.textContent = 'Point your device to scan your room, tap to place furniture. Move and scale with gestures.';
+      }
     };
 
-    modelViewer.addEventListener('ar-status', event => {
-      if (event.detail.status === 'session-started') {
-        instructions.textContent = 'Move your device to scan your room surfaces.';
-      } else if(event.detail.status === 'session-ended') {
-        instructions.textContent = 'Point your device to scan room and tap to place furniture.';
-      }
-    });
-
+    // Optional: Hide instructions after showing them for a while
     modelViewer.addEventListener('model-visibility', event => {
       if(event.detail.visible) {
-        instructions.textContent = 'Tap and drag to move or pinch to scale furniture.';
         setTimeout(() => {
           instructions.classList.add('hidden');
         }, 4000);
