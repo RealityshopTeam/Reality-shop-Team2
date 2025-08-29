@@ -33,7 +33,8 @@
       width: 100%;
       padding: 12px 10px;
       font-weight: 600;
-      font-size: 1.1rem;
+      font-size: 1.2rem;
+      letter-spacing: 0.03em;
       text-align: center;
       background: rgba(0,0,0,0.5);
       user-select: none;
@@ -41,37 +42,32 @@
       transition: opacity 0.3s ease;
       color: #eee;
     }
-    .hidden { opacity: 0; pointer-events: none; }
+    .hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
   <div class="ar-container">
-    <!-- Model Viewer with WebXR enabled -->
     <model-viewer
       id="arModelViewer"
-      src="chair.glb"   <!-- 👈 put your default 3D model here -->
+      src=""
       alt="3D Furniture Model"
       ar
-      ar-modes="webxr scene-viewer quick-look"
-      ar-scale="auto"
+      ar-modes="scene-viewer quick-look webxr"
       camera-controls
       auto-rotate
       shadow-intensity="1"
       environment-image="neutral"
+      ar-scale="auto"
       interaction-prompt="tap-to-place"
       xr-environment
+      xr-standard-shadows
     >
-      <button slot="ar-button" style="
-        position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
-        background: #00c896; color: white; border: none; padding: 12px 20px;
-        font-size: 1rem; border-radius: 8px; cursor: pointer;">
-        View in your room
-      </button>
     </model-viewer>
-
-    <!-- Instructions -->
     <div class="instructions" id="instructions">
-      Point your device to scan your room, tap to place furniture. Use gestures to move/scale.
+      Point your device to scan your room, tap to place furniture. Move and scale with gestures.
     </div>
   </div>
 
@@ -79,32 +75,36 @@
     const modelViewer = document.getElementById('arModelViewer');
     const instructions = document.getElementById('instructions');
 
-    // Load model dynamically from ?model= parameter
     function getQueryParam(param) {
       const urlParams = new URLSearchParams(window.location.search);
       return urlParams.get(param);
     }
+
     window.onload = () => {
       const modelPath = getQueryParam('model');
       if (modelPath) {
         modelViewer.src = decodeURIComponent(modelPath);
+      } else {
+        instructions.textContent = 'No model specified. Please open from product page.';
+        modelViewer.style.display = 'none';
+        return;
       }
     };
 
-    // Update instructions based on AR session
     modelViewer.addEventListener('ar-status', event => {
       if (event.detail.status === 'session-started') {
-        instructions.textContent = 'Move your device around to scan room surfaces...';
-      } else if (event.detail.status === 'session-ended') {
-        instructions.textContent = 'Tap "View in your room" to try again.';
-        instructions.classList.remove('hidden');
+        instructions.textContent = 'Move your device to scan your room surfaces.';
+      } else if(event.detail.status === 'session-ended') {
+        instructions.textContent = 'Point your device to scan room and tap to place furniture.';
       }
     });
 
     modelViewer.addEventListener('model-visibility', event => {
-      if (event.detail.visible) {
-        instructions.textContent = 'Pinch to scale, drag to move the furniture.';
-        setTimeout(() => instructions.classList.add('hidden'), 4000);
+      if(event.detail.visible) {
+        instructions.textContent = 'Tap and drag to move or pinch to scale furniture.';
+        setTimeout(() => {
+          instructions.classList.add('hidden');
+        }, 4000);
       }
     });
   </script>
