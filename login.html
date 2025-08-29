@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login - Reality Shop</title>
+<script src= "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";></script>
+<script src="https://www.gstatic.com/firebasejs/12.2.1/firebase-analytics.js";></script> 
   <style>
         body {
             margin: 0;
@@ -179,8 +181,38 @@
 <footer>
   <p>© 2025 Reality Shop. All rights reserved.</p>
 </footer>
+<script>
+    const firebaseConfig = {
+    apiKey: "AIzaSyApoRYH0BkYUWl7XLIC0r6_aH1Z9o41wUk",
+    authDomain: "realityshop-85a09.firebaseapp.com",
+    projectId: "realityshop-85a09",
+    storageBucket: "realityshop-85a09.firebasestorage.app",
+    messagingSenderId: "515865744889",
+    appId: "1:515865744889:web:3d6d93a63799b5764e9928",
+    measurementId: "G-J30DVH5L8L"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+
+  // Handle login
+  document.getElementById("loginForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    auth.signInWithEmailAndPassword(email, password)
+      .then(userCredential => {
+        alert("Login Successful!");
+        window.location.href = "shop.html"; // redirect after login
+      })
+      .catch(error => {
+        alert(error.message);
+      });
+  });
+</script>  
 
 </body>
 </html>
+
 
 
