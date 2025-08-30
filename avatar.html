@@ -74,7 +74,7 @@
     const loader = new GLTFLoader();
     let avatar, mixer, actions = {}, activeAction;
 
-    loader.load("baseAvatar.glb", (gltf) => {
+    loader.load("imgs/baseAvatar.glb", (gltf) => {
       avatar = gltf.scene;
       avatar.traverse(obj => {
         if (obj.isMesh) { obj.castShadow = true; }
@@ -123,3 +123,4 @@
   </script>
 </body>
 </html>
+
