@@ -49,7 +49,7 @@
     loader.load("imgs/chair.glb", gltf => {
       modelObj = gltf.scene;
       modelObj.scale.set(0.5, 0.5, 0.5);
-      modelObj.visible = true; // only show after tap
+      modelObj.visible = false; // only show after tap
       scene.add(modelObj);
     }, undefined, err => console.error("Model load error:", err));
 
@@ -132,4 +132,5 @@
   </script>
 </body>
 </html>
+
 
