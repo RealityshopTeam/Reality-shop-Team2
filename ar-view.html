@@ -2,135 +2,167 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Reality Shop - Universal Fake AR</title>
+  <title>Reality Shop - Universal AR View</title>
   <style>
-    html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
-    #cameraFeed, canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    html, body {
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      background: black;
+    }
+    #fallbackContainer {
+      display: none;
+      width: 100%; height: 100%;
+      position: relative;
+    }
+    video#cameraFeed {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      z-index: 0;
+    }
+    canvas#threeCanvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 1;
+    }
     .instructions {
-      position: absolute; bottom: 10px; width: 100%;
-      text-align: center; color: white;
-      font-size: 1rem; font-weight: bold;
-      background: rgba(0,0,0,0.5); padding: 6px;
+      position: absolute;
+      bottom: 10px;
+      width: 100%;
+      text-align: center;
+      font-weight: bold;
+      color: white;
+      background: rgba(0,0,0,0.4);
+      padding: 8px;
+      z-index: 2;
+    }
+    #arContainer {
+      width: 100%; height: 100%;
     }
   </style>
 </head>
 <body>
-  <video id="cameraFeed" autoplay playsinline muted></video>
-  <canvas id="threeCanvas"></canvas>
-  <div class="instructions">👆 Tap to place, ✋ drag to move, 🤏 pinch to scale</div>
+  <!-- WebXR AR (real) -->
+  <div id="arContainer">
+    <model-viewer
+      id="arModelViewer"
+      src="chair.glb"
+      alt="3D Furniture Model"
+      ar
+      ar-modes="scene-viewer quick-look webxr"
+      camera-controls
+      auto-rotate
+      shadow-intensity="1"
+      environment-image="neutral"
+      ar-scale="auto"
+      interaction-prompt="tap-to-place"
+      style="width:100%; height:100%;"
+    ></model-viewer>
+  </div>
 
-  <!-- ✅ Use ES Modules from CDN (latest three.js with GLTFLoader) -->
-  <script type="module">
-    import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
-    import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js";
+  <!-- Fallback AR (fake) -->
+  <div id="fallbackContainer">
+    <video id="cameraFeed" autoplay playsinline></video>
+    <canvas id="threeCanvas"></canvas>
+    <div class="instructions">📱 Tap/drag to move, pinch to scale furniture.</div>
+  </div>
 
-    const video = document.getElementById("cameraFeed");
-    const canvas = document.getElementById("threeCanvas");
+  <!-- Scripts -->
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/loaders/GLTFLoader.js"></script>
 
-    // Setup camera feed
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-      .then(stream => { video.srcObject = stream; })
-      .catch(err => console.error("Camera error:", err));
+  <script>
+    const modelViewer = document.getElementById("arModelViewer");
+    const fallback = document.getElementById("fallbackContainer");
 
-    // Three.js scene
-    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    // Check if WebXR AR is supported
+    if (!("xr" in navigator)) {
+      // Hide model-viewer and show fallback
+      document.getElementById("arContainer").style.display = "none";
+      fallback.style.display = "block";
 
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.01, 100);
-    camera.position.z = 2;
-
-    const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
-    scene.add(light);
-
-    // Load furniture model
-    const loader = new GLTFLoader();
-    let modelObj;
-    loader.load("imgs/chair.glb", gltf => {
-      modelObj = gltf.scene;
-      modelObj.scale.set(0.5, 0.5, 0.5);
-      modelObj.visible = false; // only show after tap
-      scene.add(modelObj);
-    }, undefined, err => console.error("Model load error:", err));
-
-    // --- Gestures ---
-    let dragging = false, lastX = 0, lastY = 0;
-    let startDistance = 0, startScale = 1;
-
-    function getDistance(touches) {
-      const dx = touches[0].clientX - touches[1].clientX;
-      const dy = touches[0].clientY - touches[1].clientY;
-      return Math.sqrt(dx*dx + dy*dy);
-    }
-
-    canvas.addEventListener("touchstart", e => {
-      if (e.touches.length === 1) {
-        if (modelObj) {
-          modelObj.visible = true;
-          modelObj.position.set(0, -0.5, -2);
-        }
-        dragging = true;
-        lastX = e.touches[0].clientX;
-        lastY = e.touches[0].clientY;
-      } else if (e.touches.length === 2 && modelObj) {
-        startDistance = getDistance(e.touches);
-        startScale = modelObj.scale.x;
-      }
-    });
-
-    canvas.addEventListener("touchmove", e => {
-      if (dragging && e.touches.length === 1 && modelObj) {
-        const dx = (e.touches[0].clientX - lastX) / 200;
-        const dy = (e.touches[0].clientY - lastY) / 200;
-        modelObj.position.x += dx;
-        modelObj.position.y -= dy;
-        lastX = e.touches[0].clientX;
-        lastY = e.touches[0].clientY;
-      } else if (e.touches.length === 2 && modelObj) {
-        const newDist = getDistance(e.touches);
-        const scaleFactor = newDist / startDistance;
-        modelObj.scale.setScalar(startScale * scaleFactor);
-      }
-    });
-
-    canvas.addEventListener("touchend", () => { dragging = false; });
-
-    // Mouse support for PC
-    canvas.addEventListener("mousedown", e => {
-      if (modelObj) modelObj.visible = true;
-      dragging = true; lastX = e.clientX; lastY = e.clientY;
-    });
-    canvas.addEventListener("mousemove", e => {
-      if (dragging && modelObj) {
-        const dx = (e.clientX - lastX) / 100;
-        const dy = (e.clientY - lastY) / 100;
-        modelObj.position.x += dx;
-        modelObj.position.y -= dy;
-        lastX = e.clientX; lastY = e.clientY;
-      }
-    });
-    canvas.addEventListener("mouseup", () => { dragging = false; });
-    canvas.addEventListener("wheel", e => {
-      if (modelObj) {
-        const s = modelObj.scale.x * (1 - e.deltaY * 0.001);
-        modelObj.scale.setScalar(Math.max(0.1, s));
-      }
-    });
-
-    // Render loop
-    function animate() {
-      renderer.render(scene, camera);
-      requestAnimationFrame(animate);
-    }
-    animate();
-
-    window.addEventListener("resize", () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
+      const video = document.getElementById('cameraFeed');
+      const canvas = document.getElementById('threeCanvas');
+      const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
-    });
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 100);
+      camera.position.z = 2;
+
+      const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
+      scene.add(light);
+
+      // Load GLB furniture
+      const loader = new THREE.GLTFLoader();
+      let model;
+      loader.load("chair.glb", gltf => {
+        model = gltf.scene;
+        model.scale.set(0.5, 0.5, 0.5);
+        scene.add(model);
+      });
+
+      // Camera feed
+      async function startCamera() {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+          video.srcObject = stream;
+        } catch (err) {
+          console.error("Camera not available", err);
+        }
+      }
+      startCamera();
+
+      // Gestures
+      let lastX, lastY, isDragging = false, scale = 1;
+      canvas.addEventListener("touchstart", e => {
+        if (e.touches.length === 1) {
+          isDragging = true;
+          lastX = e.touches[0].clientX;
+          lastY = e.touches[0].clientY;
+        }
+      });
+      canvas.addEventListener("touchmove", e => {
+        if (model && e.touches.length === 1 && isDragging) {
+          let dx = (e.touches[0].clientX - lastX) * 0.01;
+          let dy = (e.touches[0].clientY - lastY) * 0.01;
+          model.position.x += dx;
+          model.position.y -= dy;
+          lastX = e.touches[0].clientX;
+          lastY = e.touches[0].clientY;
+        } else if (model && e.touches.length === 2) {
+          // Pinch zoom
+          let dx = e.touches[0].clientX - e.touches[1].clientX;
+          let dy = e.touches[0].clientY - e.touches[1].clientY;
+          let dist = Math.sqrt(dx * dx + dy * dy);
+          if (window.lastDist) {
+            let diff = dist - window.lastDist;
+            scale += diff * 0.002;
+            model.scale.set(scale, scale, scale);
+          }
+          window.lastDist = dist;
+        }
+      });
+      canvas.addEventListener("touchend", () => { isDragging = false; window.lastDist = null; });
+
+      // Render loop
+      function animate() {
+        requestAnimationFrame(animate);
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    }
   </script>
 </body>
 </html>
-
-
