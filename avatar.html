@@ -2,17 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Reality Shop - Avatar</title>
+  <title>Reality Shop - Avatar Try-On</title>
   <style>
     body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; background: #101010; color: white; }
     #threeCanvas { width: 100%; height: 100vh; display: block; }
     .ui-panel {
-      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-      display: flex; gap: 12px;
+      position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 12px; background: rgba(0,0,0,0.6); padding: 10px 15px; border-radius: 10px;
     }
     button {
-      padding: 10px 18px; border: none; border-radius: 8px;
-      background: #ff9800; color: white; font-size: 1rem; font-weight: bold;
+      padding: 8px 14px; border: none; border-radius: 6px;
+      background: #ff9800; color: white; font-size: 0.9rem; font-weight: bold;
       cursor: pointer; transition: 0.3s;
     }
     button:hover { background: #e67600; }
@@ -21,12 +21,13 @@
 <body>
   <canvas id="threeCanvas"></canvas>
 
-  <!-- Controls for actions -->
+  <!-- Clothing UI -->
   <div class="ui-panel">
-    <button onclick="playAction('Idle')">Idle</button>
-    <button onclick="playAction('Wave')">👋 Wave</button>
-    <button onclick="playAction('Walk')">🚶 Walk</button>
-    <button onclick="playAction('Dance')">💃 Dance</button>
+    <button onclick="changeClothes('shirt1')">👕 Shirt 1</button>
+    <button onclick="changeClothes('shirt2')">👕 Shirt 2</button>
+    <button onclick="changeClothes('pants1')">👖 Pants 1</button>
+    <button onclick="changeClothes('pants2')">👖 Pants 2</button>
+    <button onclick="removeClothes()">❌ Remove Clothes</button>
   </div>
 
   <script type="module">
@@ -49,7 +50,7 @@
     // Controls
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.target.set(0, 1, 0);
+    controls.target.set(0, 1.5, 0);
 
     // Lights
     const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
@@ -70,37 +71,41 @@
     ground.receiveShadow = true;
     scene.add(ground);
 
-    // Load avatar model
+    // Loaders
     const loader = new GLTFLoader();
-    let avatar, mixer, actions = {}, activeAction;
+    let avatar, currentClothes = null;
 
+    // Load avatar
     loader.load("imgs/baseAvatar.glb", (gltf) => {
       avatar = gltf.scene;
-      avatar.traverse(obj => {
-        if (obj.isMesh) { obj.castShadow = true; }
-      });
-      avatar.scale.set(1, 1, 1);
+      avatar.traverse(obj => { if (obj.isMesh) obj.castShadow = true; });
+      avatar.scale.set(1.2, 1.2, 1.2);
       scene.add(avatar);
-
-      // Animations
-      mixer = new THREE.AnimationMixer(avatar);
-      gltf.animations.forEach(clip => {
-        actions[clip.name] = mixer.clipAction(clip);
-      });
-
-      // Default action
-      if (actions["Idle"]) playAction("Idle");
     });
 
-    // Play selected action
-    window.playAction = function(name) {
-      if (!actions[name]) {
-        alert("⚠️ Animation '" + name + "' not found in model.");
-        return;
-      }
-      if (activeAction) activeAction.stop();
-      activeAction = actions[name];
-      activeAction.reset().fadeIn(0.3).play();
+    // Clothing options (your own .glb files in imgs/)
+    const clothesModels = {
+      "shirt1": "imgs/shirt1.glb",
+      "shirt2": "imgs/shirt2.glb",
+      "pants1": "imgs/pants1.glb",
+      "pants2": "imgs/pants2.glb"
+    };
+
+    // Change clothes
+    window.changeClothes = function(type) {
+      if (!clothesModels[type]) return alert("Model not found!");
+      if (currentClothes) { scene.remove(currentClothes); currentClothes = null; }
+
+      loader.load(clothesModels[type], (gltf) => {
+        currentClothes = gltf.scene;
+        currentClothes.scale.set(1.2, 1.2, 1.2);
+        scene.add(currentClothes);
+      });
+    };
+
+    // Remove clothes
+    window.removeClothes = function() {
+      if (currentClothes) { scene.remove(currentClothes); currentClothes = null; }
     };
 
     // Resize
@@ -111,11 +116,8 @@
     });
 
     // Animate loop
-    const clock = new THREE.Clock();
     function animate() {
       requestAnimationFrame(animate);
-      const delta = clock.getDelta();
-      if (mixer) mixer.update(delta);
       controls.update();
       renderer.render(scene, camera);
     }
@@ -123,4 +125,3 @@
   </script>
 </body>
 </html>
-
