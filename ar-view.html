@@ -101,7 +101,7 @@
       // Load GLB furniture
       const loader = new THREE.GLTFLoader();
       let model;
-      loader.load("chair.glb", gltf => {
+      loader.load("imgs/chair.glb", gltf => {
         model = gltf.scene;
         model.scale.set(0.5, 0.5, 0.5);
         scene.add(model);
@@ -166,3 +166,4 @@
   </script>
 </body>
 </html>
+
