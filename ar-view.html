@@ -47,9 +47,9 @@
     const loader = new GLTFLoader();
     let modelObj;
 
-    // ✅ Update this path to match your folder structure
+    // ✅ Make sure imgs/chair.glb exists relative to this HTML file
     loader.load(
-      "imgs/chair.glb",
+      "./imgs/chair.glb",
       gltf => {
         modelObj = gltf.scene;
         modelObj.scale.set(0.5, 0.5, 0.5);
