@@ -1,169 +1,410 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Reality Shop - Universal AR View</title>
+  <meta charset="utf-8" />
+  <title>Reality Shop — Universal Advanced Fake AR</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
-    html, body {
-      margin: 0; padding: 0;
-      width: 100%; height: 100%;
-      overflow: hidden;
-      font-family: Arial, sans-serif;
-      background: black;
+    :root{--ui-bg:rgba(10,10,10,0.6);--accent:#00c896;--text:#fff}
+    html,body{height:100%;margin:0;background:#000;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+    #app{position:relative;width:100%;height:100%;overflow:hidden}
+    video, canvas { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+    #ui {
+      position: absolute; left:10px; top:10px; z-index:30; display:flex; gap:8px; flex-direction:column;
     }
-    #fallbackContainer {
-      display: none;
-      width: 100%; height: 100%;
-      position: relative;
-    }
-    video#cameraFeed {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      object-fit: cover;
-      z-index: 0;
-    }
-    canvas#threeCanvas {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      z-index: 1;
-    }
-    .instructions {
-      position: absolute;
-      bottom: 10px;
-      width: 100%;
-      text-align: center;
-      font-weight: bold;
-      color: white;
-      background: rgba(0,0,0,0.4);
-      padding: 8px;
-      z-index: 2;
-    }
-    #arContainer {
-      width: 100%; height: 100%;
-    }
+    .panel { background:var(--ui-bg); color:var(--text); padding:8px; border-radius:8px; backdrop-filter: blur(6px); }
+    select, button, input[type=file] { font-size:14px; padding:6px; border-radius:6px; border: none; }
+    button { background:var(--accent); color:#000; cursor:pointer; }
+    #productsList { display:flex; gap:8px; margin-top:6px; overflow-x:auto; padding-bottom:6px; }
+    .prod { min-width:64px; text-align:center; cursor:pointer; }
+    .prod img{ width:64px; height:64px; object-fit:cover; border-radius:6px; border:2px solid transparent; }
+    .prod.selected img{ border-color:var(--accent); }
+    #bottomBar{position:absolute;left:0;right:0;bottom:10px;display:flex;justify-content:center;z-index:30}
+    .hint{background:var(--ui-bg); color:var(--text); padding:8px 12px; border-radius:999px; font-weight:600}
+    #placedList{ max-height:160px; overflow:auto; margin-top:6px; }
+    .placedItem{ display:flex; justify-content:space-between; gap:8px; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.04) }
+    .smallBtn{ padding:6px 8px; border-radius:6px; background:rgba(255,255,255,0.06); color:var(--text); border:none }
   </style>
 </head>
 <body>
-  <!-- WebXR AR (real) -->
-  <div id="arContainer">
-    <model-viewer
-      id="arModelViewer"
-      src="chair.glb"
-      alt="3D Furniture Model"
-      ar
-      ar-modes="scene-viewer quick-look webxr"
-      camera-controls
-      auto-rotate
-      shadow-intensity="1"
-      environment-image="neutral"
-      ar-scale="auto"
-      interaction-prompt="tap-to-place"
-      style="width:100%; height:100%;"
-    ></model-viewer>
-  </div>
-
-  <!-- Fallback AR (fake) -->
-  <div id="fallbackContainer">
-    <video id="cameraFeed" autoplay playsinline></video>
+  <div id="app">
+    <video id="cameraFeed" autoplay playsinline muted></video>
     <canvas id="threeCanvas"></canvas>
-    <div class="instructions">📱 Tap/drag to move, pinch to scale furniture.</div>
+
+    <div id="ui" class="panel">
+      <div>
+        <strong>Products</strong>
+        <div id="productsList"></div>
+      </div>
+
+      <div style="margin-top:8px;">
+        <label class="panel" style="display:flex;gap:6px;align-items:center">
+          <input id="fileInput" type="file" accept=".glb,.gltf" />
+          <button id="uploadBtn" class="smallBtn">Upload .glb</button>
+        </label>
+      </div>
+
+      <div style="margin-top:8px;">
+        <strong>Placed Items</strong>
+        <div id="placedList"></div>
+      </div>
+    </div>
+
+    <div id="bottomBar">
+      <div class="hint">Tap to place • Drag to move • Pinch to scale • Two-finger rotate</div>
+    </div>
   </div>
 
-  <!-- Scripts -->
-  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/loaders/GLTFLoader.js"></script>
+  <!-- Use stable Three.js r149 (global THREE + example loaders) -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/examples/js/loaders/GLTFLoader.js"></script>
 
   <script>
-    const modelViewer = document.getElementById("arModelViewer");
-    const fallback = document.getElementById("fallbackContainer");
+  // ---------- Configuration ----------
+  const PRODUCTS = [
+    { id: 'chair', name: 'Chair', url: 'imgs/chair.glb', thumb: '' },
+    { id: 'sofa',  name: 'Sofa',  url: 'imgs/sofa.glb',  thumb: '' },
+    { id: 'table', name: 'Table', url: 'imgs/table.glb', thumb: '' }
+  ];
+  // Make sure products exist on server or upload them via file input.
 
-    // Check if WebXR AR is supported
-    if (!("xr" in navigator)) {
-      // Hide model-viewer and show fallback
-      document.getElementById("arContainer").style.display = "none";
-      fallback.style.display = "block";
+  // ---------- DOM ----------
+  const video = document.getElementById('cameraFeed');
+  const canvas = document.getElementById('threeCanvas');
+  const productsList = document.getElementById('productsList');
+  const fileInput = document.getElementById('fileInput');
+  const uploadBtn = document.getElementById('uploadBtn');
+  const placedList = document.getElementById('placedList');
 
-      const video = document.getElementById('cameraFeed');
-      const canvas = document.getElementById('threeCanvas');
-      const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
-      renderer.setSize(window.innerWidth, window.innerHeight);
+  // ---------- Three.js basic setup ----------
+  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+  renderer.setPixelRatio(window.devicePixelRatio || 1);
+  renderer.setSize(window.innerWidth, window.innerHeight, false);
 
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 100);
-      camera.position.z = 2;
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.01, 1000);
+  camera.position.set(0, 1.6, 0); // camera height ~1.6m for nicer perspective
 
-      const light = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
-      scene.add(light);
+  const hemi = new THREE.HemisphereLight(0xffffff, 0x444444, 1.2);
+  scene.add(hemi);
+  const dir = new THREE.DirectionalLight(0xffffff, 0.6);
+  dir.position.set(1, 2, 1);
+  scene.add(dir);
 
-      // Load GLB furniture
-      const loader = new THREE.GLTFLoader();
-      let model;
-      loader.load("imgs/chair.glb", gltf => {
-        model = gltf.scene;
-        model.scale.set(0.5, 0.5, 0.5);
-        scene.add(model);
-      });
+  // Floor plane (invisible) at y = 0 to place objects on
+  const floorPlane = new THREE.Plane(new THREE.Vector3(0,1,0), 0);
 
-      // Camera feed
-      async function startCamera() {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-          video.srcObject = stream;
-        } catch (err) {
-          console.error("Camera not available", err);
-        }
-      }
-      startCamera();
+  // GLTF loader
+  const loader = new THREE.GLTFLoader();
 
-      // Gestures
-      let lastX, lastY, isDragging = false, scale = 1;
-      canvas.addEventListener("touchstart", e => {
-        if (e.touches.length === 1) {
-          isDragging = true;
-          lastX = e.touches[0].clientX;
-          lastY = e.touches[0].clientY;
-        }
-      });
-      canvas.addEventListener("touchmove", e => {
-        if (model && e.touches.length === 1 && isDragging) {
-          let dx = (e.touches[0].clientX - lastX) * 0.01;
-          let dy = (e.touches[0].clientY - lastY) * 0.01;
-          model.position.x += dx;
-          model.position.y -= dy;
-          lastX = e.touches[0].clientX;
-          lastY = e.touches[0].clientY;
-        } else if (model && e.touches.length === 2) {
-          // Pinch zoom
-          let dx = e.touches[0].clientX - e.touches[1].clientX;
-          let dy = e.touches[0].clientY - e.touches[1].clientY;
-          let dist = Math.sqrt(dx * dx + dy * dy);
-          if (window.lastDist) {
-            let diff = dist - window.lastDist;
-            scale += diff * 0.002;
-            model.scale.set(scale, scale, scale);
-          }
-          window.lastDist = dist;
-        }
-      });
-      canvas.addEventListener("touchend", () => { isDragging = false; window.lastDist = null; });
+  // Manage placed objects
+  const placedObjects = []; // {id, mesh, name}
 
-      // Render loop
-      function animate() {
-        requestAnimationFrame(animate);
-        renderer.render(scene, camera);
-      }
-      animate();
+  // Raycaster & tmp vectors
+  const raycaster = new THREE.Raycaster();
+  const mouse = new THREE.Vector2();
 
-      window.addEventListener("resize", () => {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-      });
+  // ---------- Camera feed ----------
+  async function startCamera(){
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+      video.srcObject = stream;
+      await video.play();
+      console.log('Camera started');
+    } catch (err) {
+      console.error('Camera start failed:', err);
     }
+  }
+  startCamera();
+
+  // ---------- Helpers ----------
+  function screenToWorldOnFloor(clientX, clientY){
+    // convert to NDC
+    const rect = canvas.getBoundingClientRect();
+    mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    // intersect with floor plane y=0
+    const intersectPoint = new THREE.Vector3();
+    raycaster.ray.intersectPlane(floorPlane, intersectPoint);
+    return intersectPoint; // may be null if plane behind camera
+  }
+
+  function makePlaceholderMesh(){
+    const g = new THREE.BoxGeometry(0.5,0.5,0.5);
+    const m = new THREE.MeshStandardMaterial({ color:0x9ad3b4, metalness:0.2, roughness:0.6 });
+    return new THREE.Mesh(g,m);
+  }
+
+  // ---------- UI: product list ----------
+  let selectedProduct = null;
+  function buildProductsUI(){
+    productsList.innerHTML = '';
+    PRODUCTS.forEach(p=>{
+      const div = document.createElement('div'); div.className='prod'; div.dataset.url=p.url;
+      const img = document.createElement('img'); img.alt=p.name;
+      img.src = p.thumb || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="100%" height="100%" fill="%23000"/><text x="50%" y="50%" fill="%23fff" font-size="12" text-anchor="middle" dominant-baseline="middle">'+encodeURIComponent(p.name)+'</text></svg>';
+      div.appendChild(img);
+      const span = document.createElement('div'); span.style.fontSize='12px'; span.textContent=p.name; div.appendChild(span);
+      div.addEventListener('click', ()=> {
+        document.querySelectorAll('.prod').forEach(x=>x.classList.remove('selected'));
+        div.classList.add('selected');
+        selectedProduct = p;
+        flashHint('Selected: '+p.name);
+      });
+      productsList.appendChild(div);
+    });
+  }
+  buildProductsUI();
+
+  // ---------- Upload local .glb ----------
+  uploadBtn.addEventListener('click', ()=> fileInput.click());
+  fileInput.addEventListener('change', (ev)=>{
+    const f = ev.target.files[0];
+    if(!f) return;
+    const url = URL.createObjectURL(f);
+    // Add temporary product entry
+    const id = 'upload-'+Date.now();
+    const newProd = { id, name: f.name, url, thumb: '' };
+    PRODUCTS.unshift(newProd);
+    buildProductsUI();
+    // Auto-select
+    selectedProduct = newProd;
+    document.querySelectorAll('.prod')[0].classList.add('selected');
+    flashHint('Uploaded: '+f.name);
+  });
+
+  // ---------- Place object on tap / click ----------
+  let dragging = false;
+  let activeObject = null; // object being dragged
+  let prevTouches = null;
+
+  function placeObjectAt(point, product){
+    // create holder group
+    const group = new THREE.Group();
+    group.position.copy(point);
+    group.rotation.y = Math.PI; // adjust facing
+    group.userData.name = product.name || 'Product';
+    scene.add(group);
+
+    // load model into group
+    loader.load(product.url,
+      gltf=>{
+        const model = gltf.scene;
+        // optional normalization: center and scale to reasonable size
+        // try to fit bounding box to ~1m width
+        const box = new THREE.Box3().setFromObject(model);
+        const size = new THREE.Vector3(); box.getSize(size);
+        const maxDim = Math.max(size.x, size.y, size.z);
+        const target = 1.0; // desired width (meters)
+        const scale = maxDim > 0 ? (target / maxDim) : 1;
+        model.scale.setScalar(scale*0.8);
+        // center model on group
+        box.setFromObject(model);
+        box.getCenter(model.position).multiplyScalar(-1);
+        model.position.y = 0; // keep base at group pivot (we'll lower group)
+        group.add(model);
+        // drop group so model base sits on floor (attempt)
+        const newBox = new THREE.Box3().setFromObject(model);
+        const minY = newBox.min.y;
+        group.position.y -= minY;
+        // record
+        placedObjects.push({ id: Date.now().toString(), name: product.name, group, model });
+        updatePlacedList();
+      },
+      xhr=>{/*progress*/},
+      err=>{
+        console.error('GLB load error:', err);
+        // fallback placeholder
+        const placeholder = makePlaceholderMesh();
+        group.add(placeholder);
+        placedObjects.push({ id: Date.now().toString(), name: product.name, group, model: placeholder });
+        updatePlacedList();
+      }
+    );
+  }
+
+  // update placed items UI
+  function updatePlacedList(){
+    placedList.innerHTML = '';
+    placedObjects.forEach(item=>{
+      const el = document.createElement('div'); el.className='placedItem';
+      el.innerHTML = `<div>${item.name}</div><div><button class="smallBtn" data-id="${item.id}" data-act="select">Select</button> <button class="smallBtn" data-id="${item.id}" data-act="delete">Delete</button></div>`;
+      placedList.appendChild(el);
+    });
+  }
+
+  // list click handlers
+  placedList.addEventListener('click', (ev)=>{
+    const btn = ev.target.closest('button');
+    if(!btn) return;
+    const id = btn.dataset.id;
+    const act = btn.dataset.act;
+    const idx = placedObjects.findIndex(p=>p.id===id);
+    if(idx<0) return;
+    if(act==='delete'){
+      const removed = placedObjects.splice(idx,1)[0];
+      scene.remove(removed.group);
+      updatePlacedList();
+      flashHint('Deleted: '+removed.name);
+    } else if(act==='select'){
+      activeObject = placedObjects[idx];
+      flashHint('Selected: '+activeObject.name);
+    }
+  });
+
+  // ---------- Interaction: tap/place, drag (move along floor plane), scale, rotate ----------
+  function onPointerDown(e){
+    e.preventDefault();
+    const touches = e.touches && e.touches.length ? e.touches : [e];
+    if(touches.length === 1){
+      const pt = screenToWorldPoint(touches[0].clientX, touches[0].clientY);
+      // if clicking an existing object, pick it
+      const picked = pickObject(touches[0].clientX, touches[0].clientY);
+      if(picked){
+        activeObject = picked;
+        dragging = true;
+      } else {
+        if(!selectedProduct){
+          flashHint('Select a product first');
+          return;
+        }
+        placeObjectAt(pt, selectedProduct);
+      }
+    } else if(touches.length === 2){
+      // start two-finger gestures
+      prevTouches = [{x:touches[0].clientX,y:touches[0].clientY},{x:touches[1].clientX,y:touches[1].clientY}];
+    }
+  }
+
+  function onPointerMove(e){
+    e.preventDefault();
+    const touches = e.touches && e.touches.length ? e.touches : [e];
+    if(activeObject && dragging && touches.length===1){
+      const pt = screenToWorldPoint(touches[0].clientX, touches[0].clientY);
+      if(pt) activeObject.group.position.copy(pt);
+    } else if(activeObject && touches.length===2 && prevTouches){
+      // two-finger gestures: scale & rotate
+      const t0 = touches[0], t1 = touches[1];
+      const prev0 = prevTouches[0], prev1 = prevTouches[1];
+      // distances
+      const curDist = Math.hypot(t0.clientX - t1.clientX, t0.clientY - t1.clientY);
+      const prevDist = Math.hypot(prev0.x - prev1.x, prev0.y - prev1.y);
+      const s = (prevDist>0) ? (curDist / prevDist) : 1;
+      activeObject.group.scale.multiplyScalar(s);
+      // rotate: angle difference
+      const curAngle = Math.atan2(t1.clientY - t0.clientY, t1.clientX - t0.clientX);
+      const prevAngle = Math.atan2(prev1.y - prev0.y, prev1.x - prev0.x);
+      const dAngle = curAngle - prevAngle;
+      activeObject.group.rotation.y -= dAngle;
+      // update prevTouches
+      prevTouches = [{x:t0.clientX,y:t0.clientY},{x:t1.clientX,y:t1.clientY}];
+    }
+  }
+
+  function onPointerUp(e){
+    e.preventDefault();
+    dragging = false;
+    prevTouches = null;
+  }
+
+  // utilities: pick object under screen point
+  function pickObject(clientX, clientY){
+    const rect = canvas.getBoundingClientRect();
+    const x = ((clientX - rect.left) / rect.width) * 2 - 1;
+    const y = -((clientY - rect.top) / rect.height) * 2 + 1;
+    raycaster.setFromCamera({x,y}, camera);
+    // build list of pickable meshes (children within groups)
+    const pickables = [];
+    placedObjects.forEach(po=>{
+      po.group.traverse(node=>{ if(node.isMesh) pickables.push(node); });
+    });
+    const hits = raycaster.intersectObjects(pickables, true);
+    if(hits.length>0){
+      // find parent group for the hit mesh
+      const mesh = hits[0].object;
+      const parentGroup = placedObjects.find(po => po.group && po.group.children.includes(mesh) || po.group.getObjectById(mesh.id));
+      // parentGroup detection fallback:
+      if(!parentGroup){
+        // try find group ancestor
+        let obj = mesh;
+        while(obj && !obj.parent.isScene){
+          if(placedObjects.some(po=>po.group === obj.parent)) {
+            const po = placedObjects.find(po=>po.group === obj.parent);
+            return po;
+          }
+          obj = obj.parent;
+        }
+      }
+      // find po by group containing mesh
+      const poMatch = placedObjects.find(po => {
+        let found=false;
+        po.group.traverse(n=>{ if(n===mesh) found=true; });
+        return found;
+      });
+      return poMatch || null;
+    }
+    return null;
+  }
+
+  // wrapper to get world point on floor
+  function screenToWorldPoint(clientX, clientY){
+    const pt = screenToWorldOnFloor(clientX, clientY);
+    if(!pt){
+      // if plane intersection fails, place a default distance in front of camera
+      const rect = canvas.getBoundingClientRect();
+      const nx = ((clientX - rect.left) / rect.width) * 2 - 1;
+      const ny = -((clientY - rect.top) / rect.height) * 2 + 1;
+      const vec = new THREE.Vector3(nx, ny, 0.5).unproject(camera);
+      const dir = vec.clone().sub(camera.position).normalize();
+      const distance = 2; // 2 meters
+      return camera.position.clone().add(dir.multiplyScalar(distance));
+    }
+    return pt;
+  }
+
+  // attach pointer listeners (support touch and mouse)
+  canvas.addEventListener('touchstart', onPointerDown, {passive:false});
+  canvas.addEventListener('touchmove', onPointerMove, {passive:false});
+  canvas.addEventListener('touchend', onPointerUp, {passive:false});
+  canvas.addEventListener('mousedown', onPointerDown, {passive:false});
+  window.addEventListener('mousemove', onPointerMove, {passive:false});
+  window.addEventListener('mouseup', onPointerUp, {passive:false});
+
+  // ---------- Render loop draws scene over camera feed ----------
+  function animate(){
+    // optionally sync camera to device pose? We keep fixed camera,
+    // but you can add smoothing or slight parallax if desired.
+    renderer.render(scene, camera);
+    requestAnimationFrame(animate);
+  }
+  animate();
+
+  // ---------- Utility: hint */
+  function flashHint(text){
+    const el = document.querySelector('.hint');
+    if(!el) return;
+    el.textContent = text;
+    setTimeout(()=> el.textContent = 'Tap to place • Drag to move • Pinch to scale • Two-finger rotate', 2200);
+  }
+
+  // Resize handling
+  window.addEventListener('resize', ()=>{
+    renderer.setSize(window.innerWidth, window.innerHeight, false);
+    camera.aspect = window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+  });
+
+  // ---------- Init default selected product (first available) ----------
+  if(PRODUCTS.length) {
+    selectedProduct = PRODUCTS[0];
+    buildProductsUI();
+    document.querySelectorAll('.prod')[0].classList.add('selected');
+  }
+
+  // ---------- Final: helper to ensure products exist ----------
+  // (console check)
+  PRODUCTS.forEach(p=> console.log('Product ready:', p.name, p.url));
   </script>
 </body>
 </html>
-
